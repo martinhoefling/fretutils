@@ -17,7 +17,7 @@ def createInvalidProbabilityClassFile(fname,classes,prbs):
     finally:
         f.close()   
 
-class testEnsemble(unittest.TestCase):
+class testEnsembleFunctions(unittest.TestCase):
     def setUp(self):
         self.workdir = tempfile.mkdtemp()
         self.prevdir = os.curdir

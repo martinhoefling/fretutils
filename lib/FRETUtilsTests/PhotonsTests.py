@@ -8,7 +8,7 @@ import unittest
 from FRETUtils import Photons
 
 
-class testPhotons(unittest.TestCase):
+class testPhotonFunctions(unittest.TestCase):
     def setUp(self):
         self.donorphoton = Photons.Photon(True,1000,4000,thermal=False)
         self.acceptorphoton = Photons.Photon(False,1000,4000,thermal=False)

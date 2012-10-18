@@ -41,13 +41,14 @@ def doMultiprocessRun(options, config, trajectories, eprobabilities):
  
     blockcount = nbursts // blocksize
     remainder = nbursts % blocksize
+    blocks=[blocksize]*blockcount
+    blocks.append(remainder)
     print "Setting up %d jobs to generate %d bursts" % (blockcount,nbursts)
-    for i in range(blockcount):
+    for block in blocks:
         verbose=0
         options.rseed = random.randint(0, sys.maxint)
-        res= pool.apply_async(calculateBursts, (trajectories, eprobabilities, config,remainder + blocksize,random.randint(0,sys.maxint),verbose))
+        res= pool.apply_async(calculateBursts, (trajectories, eprobabilities, config,block,random.randint(0,sys.maxint),verbose))
         results.append(res)
-        remainder = 0
               
     bursts=[]
     myjob=1

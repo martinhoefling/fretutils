@@ -7,7 +7,7 @@ Created on 04.10.2012
 import unittest
 import FRETUtils.Helpers as Helpers
 
-class TestHelpers(unittest.TestCase):
+class testHelperFunctions(unittest.TestCase):
     def testJtoNm(self):
         self.assertAlmostEqual(Helpers.JouleInNm(42.), 0., 4)
     
