@@ -6,8 +6,6 @@ Created on 24.06.2010
 
 import random
 import re
-import math
-from numpy import array
 
 def readProbabilities(pbfile):
     """Reads in probabilities from a specific probability file, 1st colum is the regexp to match, 2nd the name and 3rd the probability in the ensemble"""
@@ -81,11 +79,11 @@ def pickFromEnsemble(eprob):
         if rnd < epsum:
             return pr[0]
         
-#def getTrajClassProbability(traj,probabilities):
-#    """returns the class probability of a distinct trajectory"""
-#    for pr in probabilities:
-#        if pr[0]==traj["species"]:
-#            return pr[2]
+def getTrajClassProbability(traj,probabilities):
+    """returns the class probability of a distinct trajectory"""
+    for pr in probabilities:
+        if pr[0]==traj["species"]:
+            return pr[2]
 
 #def getClassProbability(myclass,probabilities):
 #    """returns the probability value of a distinct class"""

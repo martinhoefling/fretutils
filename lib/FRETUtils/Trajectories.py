@@ -6,11 +6,27 @@ Created on 24.06.2010
 
 from numpy import load as npload
 from numpy import zeros
-#from FRETUtils.Ensemble import getTrajClassProbability
+from FRETUtils.Ensemble import getTrajClassProbability
+from FRETUtils.Photons import getPhoton
 from os.path import join as pathjoin
-import os
+import os,sys
 import random
 import numpy
+
+def writeRKProbTraj(fh,trajs,probabilities):
+    """writes time, distance, kappa and the total probability in an opened file handle"""
+    keys=trajs.keys()
+    keys.sort()
+    for key in keys:
+        fh.write("# starting traj %s\n"%key)
+        if not trajs[key].has_key("photons"):
+            trajs[key]["photons"]=numpy.ones(len(trajs[key]["t"]))
+        trajs[key]["photons"]=trajs[key]["photons"]*getTrajClassProbability(trajs[key],probabilities)
+        arr=numpy.array((trajs[key]["t"],trajs[key]["R"],trajs[key]["k2"],trajs[key]["photons"]))
+        numpy.savetxt(fh,arr.T)
+        print key,"written with traj probability",getTrajClassProbability(trajs[key],probabilities)
+        
+              
 
 def createTrajectoryList(rootdir,fformat):
     """creates a dictionary of all npz files in a given directory"""
@@ -81,6 +97,50 @@ def getRandomTrajectory(trajs,species):
         if testkey >= random.random()*maxsamples:
             return trajs[testkey[0]]  
 
+def floodTrajsWithPhotons(trajs,config,randseed,verbose):
+    random.seed(randseed)
+    numpy.random.seed(random.randint(0,sys.maxint))
+    config.set("System","verbose","%d"%verbose)
+    try:
+        photcount=config.getint("Photon Flooding","photoncount")
+    except:
+        print "photoncount option in section [Photon Flooding] not found. Setting to default 10"
+        if not config.has_section("Photon Flooding"):
+            print "adding Photon Flooding section with default values"
+            config.add_section("Photon Flooding")
+        config.set("Photon Flooding","photoncount","10")
+        photcount=config.getint("Photon Flooding","photoncount")
+
+            
+    deltat=config.getfloat("Monte Carlo","deltat")
+    verbose=config.getint("System","verbose")
+    
+ 
+    for key in trajs:
+        traj=trajs[key]
+        if verbose:
+            print "Processing trajectory",key
+        traj["photons"]=zeros(traj["length"])
+        for ndx in range(traj["length"]):
+            if verbose and ndx%10==0:
+                print "%d/%d\r"%(ndx,traj["length"]),
+                
+            for i in range(photcount):
+                try:
+                    photon = getPhoton(traj,config,ndx)
+                    endndx = int(photon.endtime/deltat)
+                except ValueError:
+                    pass
+                if endndx!=traj["length"]:
+                    traj["photons"][endndx]+=1
+
+                
+
+        
+        
+        
+        
+    
 #def getTrajWeight(trajs,key,prb):
 #    """Calculates the trajectory weight in the full ensemble using the probability of the class of the trajectory and the trajectory class sample count"""
 #    return getTrajClassProbability(trajs[key],prb)*(float(trajs[key]["length"])/getClassTrajSamples(trajs[key]["species"],trajs))

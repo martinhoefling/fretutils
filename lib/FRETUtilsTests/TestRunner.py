@@ -10,7 +10,7 @@ from FRETUtilsTests.EfficiencyTests import testEfficiencyFunctions
 from FRETUtilsTests.EnsembleTests import testEnsembleFunctions
 from FRETUtilsTests.HelperTests import testHelperFunctions
 from FRETUtilsTests.PhotonsTests import testPhotonFunctions
-from FRETUtilsTests.RunTests import testFullRun, testFullRunMultiprocessing 
+from FRETUtilsTests.RunTests import testFullRun, testFullRunMultiprocessing, testFullRKPrbConversion 
 
 def runAllTests(directory="."):
     print os.path.abspath(os.curdir)

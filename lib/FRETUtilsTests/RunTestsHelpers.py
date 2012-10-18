@@ -26,6 +26,15 @@ class FakeOptions():
         self.decaytimeofile = None
         self.prffile = None
 
+class FakeOptionsRK():
+    def __init__(self):
+        self.trajdirectory = "."
+        self.configfilename = None
+        self.pbfile = "probabilities.dat"
+        self.rseed = 123
+        self.trajformat = "npz"
+        
+        self.outtrajfile = "trajout.txt"
 
 def createConstantDummyRKTraj(filename,nrsamples,dt,Rval,kappaval,fformat="numpy"):
     time = numpy.linspace(0,nrsamples*dt,nrsamples)
@@ -214,12 +223,15 @@ def writeConfigFiles():
 
     config.set('Monte Carlo','globalrejectretry','100000')
     config.set('Monte Carlo','photrejectdist','2')
+    config.set("Monte Carlo","nbursts","5")
+
     try:
         fh=open("stepreject.conf","w")
         config.write(fh)
     finally:
         fh.close()  
 
+    config.set("Monte Carlo","nbursts","50")
     config.set('System','photongenerator','cython')
     try:
         fh=open("cython.conf","w")
@@ -237,6 +249,23 @@ def writeConfigFiles():
     config.set('System','photongenerator','invalid')
     try:
         fh=open("invalid_photongenerator.conf","w")
+        config.write(fh)
+    finally:
+        fh.close()  
+
+def writeRKConfigFiles():
+    try:
+        fh=open("standard.conf","w")
+        fh.write(configfile)
+    finally:
+        fh.close()
+    
+    config = ConfigParser.RawConfigParser()
+    config.read('standard.conf')
+    config.set('Monte Carlo','minstarttraj','0')
+    config.set('Monte Carlo','maxstarttraj','0')
+    try:
+        fh=open("standardRK.conf","w")
         config.write(fh)
     finally:
         fh.close()  
@@ -275,6 +304,8 @@ rejectretry = 10
 [System]
 photongenerator = python
 ncpu =  1
+
+[Photon Flooding]
 """
 
 bursts="""6,34,1.395339993,38.22816933

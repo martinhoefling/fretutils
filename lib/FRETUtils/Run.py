@@ -7,7 +7,7 @@ Created on 04.10.2012
 from FRETUtils.Efficiencies import calculateBursts,calcKineticRatesFromConfig
 from FRETUtils.Ensemble import readProbabilities,assignTrajProbabilityClasses,cleanProbabilities
 from FRETUtils.Photons import setPhotonGenerator
-from FRETUtils.Trajectories import createTrajectoryList,readTrajs,calcFRETRates
+from FRETUtils.Trajectories import createTrajectoryList,readTrajs,calcFRETRates,writeRKProbTraj,floodTrajsWithPhotons
 
 
 import ConfigParser
@@ -51,12 +51,11 @@ def doMultiprocessRun(options, config, trajectories, eprobabilities):
         results.append(res)
               
     bursts=[]
-    myjob=1
     
-    for res in results:
+    for ene,res in enumerate(results,start=1):
         bursts+=res.get()
-        print "\r%6d of %6d jobs processed."%(myjob,blockcount),
-        myjob+=1
+        print "\r%6d of %6d jobs processed."%(ene,blockcount),
+        
     
     return bursts
 
@@ -135,28 +134,39 @@ def writeOutputFiles(options, config, bursts):
         print "Decaytimes written to ", options.decaytimeofile
     print "Finished!"
 
-def runMe(options):
-    print "Reading configuration file \"%s\"."%options.configfilename
-    config = getFRETConfig(options.configfilename)
-    calcKineticRatesFromConfig(config)
-    config.set("System", "verbose", "0")
-    config.set("Burst Size Distribution", "bsdfile", options.expbfile)
-    if options.rseed:
-        print "Setting up RNG seed to %d"%options.rseed
-        random.seed(options.rseed)
-    setPhotonGenerator(config)
-    print "\nReading trajectories recursively from directory \"%s\"."%options.trajdirectory
-    trajectories = createTrajectoryList(options.trajdirectory,options.trajformat)
-    if len(trajectories)==0:
+
+def readTrajAndClasses(options):
+    print "\nReading trajectories recursively from directory \"%s\"." % options.trajdirectory
+    trajectories = createTrajectoryList(options.trajdirectory, options.trajformat)
+    if len(trajectories) == 0:
         raise ValueError("No trajectories found. Did you specify the correct format with the -r switch? Exiting.")
-        
-    readTrajs(trajectories,options.trajformat)
-    calcFRETRates(trajectories, config)
+    readTrajs(trajectories, options.trajformat)
     print "\nReading ensemble probabilities"
     eprobabilities = readProbabilities(options.pbfile)
     assignTrajProbabilityClasses(trajectories, eprobabilities)
     print "Removing empty classes"
     eprobabilities = cleanProbabilities(trajectories, eprobabilities)
+    return trajectories, eprobabilities
+
+
+def readConfigAndAssignFRETRate(options, trajectories):
+    print "Reading configuration file \"%s\"." % options.configfilename
+    config = getFRETConfig(options.configfilename)
+    calcKineticRatesFromConfig(config)
+    config.set("System", "verbose", "0")
+    if options.rseed:
+        print "Setting up RNG seed to %d" % options.rseed
+        random.seed(options.rseed)
+    setPhotonGenerator(config)
+    calcFRETRates(trajectories, config)
+    return config
+
+def runMCFRET(options):
+    trajectories, eprobabilities = readTrajAndClasses(options)   
+    config = readConfigAndAssignFRETRate(options, trajectories)
+    config.set("Burst Size Distribution", "bsdfile", options.expbfile)
+
+
     print 
     print "================================ Input prepared ========================="
     print 
@@ -184,3 +194,18 @@ def runMe(options):
     if not options.prffile:
         writeOutputFiles(options, config, bursts)
 
+def runTrajPrbAdd(options):
+    trajectories, eprobabilities = readTrajAndClasses(options)
+    if options.configfilename:
+        config = readConfigAndAssignFRETRate(options, trajectories)
+        floodTrajsWithPhotons(trajectories,config,random.randint(0,sys.maxint),1)
+    else:
+        print "No config file specified, assigning class probabilities only."
+    print "Writing to",options.outtrajfile
+    try:
+        fh=open(options.outtrajfile,"w")
+        writeRKProbTraj(fh,trajectories,eprobabilities)
+    finally:
+        fh.close()
+        
+  

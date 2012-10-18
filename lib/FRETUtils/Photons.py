@@ -53,16 +53,16 @@ def getPhoton(traj,conf,startndx=None):
     while photon == -1:
         rejectcount=0
         while rejectcount <= conf.getint("Monte Carlo","rejectretry"):
-            photon,endtime=tryGetPhoton(pDtot,pRETpDtot,startndx,random.randint(0,sys.maxint))
+            photon,endndx=tryGetPhoton(pDtot,pRETpDtot,startndx,random.randint(0,sys.maxint))
 
-            if not rejectPhoton(startndx,endtime,traj,conf):
-                duration=endtime-startndx
+            if not rejectPhoton(startndx,endndx,traj,conf):
+                duration=endndx-startndx
 
                 if photon==0:
                     donor=True
                 else:
                     donor=False
-                return Photon(donor,endtime*conf.getfloat("Monte Carlo","deltat"),duration*conf.getfloat("Monte Carlo","deltat"))
+                return Photon(donor,endndx*conf.getfloat("Monte Carlo","deltat"),duration*conf.getfloat("Monte Carlo","deltat"))
             else:
                 rejectcount+=1  
         raise ValueError("Reject count reached")
