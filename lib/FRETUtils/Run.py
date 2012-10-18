@@ -195,6 +195,8 @@ def runMCFRET(options):
         writeOutputFiles(options, config, bursts)
 
 def runTrajPrbAdd(options):
+    TODO: add multiprocessing
+    TODO: add clipping based on decay
     trajectories, eprobabilities = readTrajAndClasses(options)
     if options.configfilename:
         config = readConfigAndAssignFRETRate(options, trajectories)
