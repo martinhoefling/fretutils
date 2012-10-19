@@ -16,6 +16,8 @@ import sys
 import cPickle
 import multiprocessing
 from numpy import array,savetxt
+from FRETUtils.Reconstruction import readEfficiencies, constructTM,\
+    resolveDistances, writeDistances
 
 def getFRETConfig(conffile):
     config = ConfigParser.ConfigParser()
@@ -248,5 +250,12 @@ def runTrajPrbAdd(options):
         writeRKProbTraj(fh,trajectories,eprobabilities,config)
     finally:
         fh.close()
-        
-  
+
+def runReconstruction(options):
+    if options.rseed:
+        print "Setting up RNG seed to %d" % options.rseed
+        random.seed(options.rseed)
+    effhist=readEfficiencies(options.efficiencyfile,options.efficiencybins)
+    TM = constructTM(options)
+    distances = resolveDistances(options,TM,effhist)
+    writeDistances(distances)

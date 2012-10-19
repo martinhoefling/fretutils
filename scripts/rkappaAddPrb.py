@@ -16,7 +16,7 @@ def getCmdlineOptions():
                       help="definition and probability of trajectory classes", default = "probabilities.dat",metavar="probabilities.dat")
     
     group2 = OptionGroup(parser, "Optional input")
-    group1.add_option("-c", "--configfile",dest="configfilename", 
+    group2.add_option("-c", "--configfile",dest="configfilename", 
                       help="configuration filename", default = None,metavar="fret.conf")
     group2.add_option("-s", "--seed",dest="rseed", 
                       help="random number generator seed", default = None, type="int" ,metavar="python_default")

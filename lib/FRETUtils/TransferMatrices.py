@@ -60,6 +60,8 @@ class TransferMatrix(object):
 
 
 class GlobalAVGKappaTransferMatrix(TransferMatrix):
+    def __init__(self,RBins,EffBins,BurstCount,burstGenerator, R0, RRange):
+        TransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RRange)
        
     def populateMatrixWithBursts(self,rbinindex,reff,bursts,weight):      
         for size in bursts:
