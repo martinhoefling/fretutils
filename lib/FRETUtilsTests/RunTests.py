@@ -310,7 +310,7 @@ class testFullRunMultiprocessing(unittest.TestCase):
         os.chdir(self.prevdir)
         shutil.rmtree(self.workdir)
        
-    def test_01dualCPU(self):
+    def test_dualCPU(self):
         options = FakeOptions()
         options.efficiencyofile="effs.txt"
         options.pbfile="aver.prb"
@@ -318,7 +318,7 @@ class testFullRunMultiprocessing(unittest.TestCase):
         runMCFRET(options)
         self.assertAlmostEqual(numpy.loadtxt("effs.txt").mean(),0.5,delta=0.05)
 
-    def test_00multiCPU(self):
+    def test_multiCPU(self):
         options = FakeOptions()
         options.efficiencyofile="effs.txt"
         options.pbfile="aver.prb"
@@ -328,7 +328,6 @@ class testFullRunMultiprocessing(unittest.TestCase):
         
 
 class testFullRKPrbConversion(unittest.TestCase):
-    
     def createTestTrajectories(self):
         #high, no and average FRET
         createConstantDummyRKTraj("high.npz", 1000, 10, 1, 4, fformat="numpy")
@@ -380,4 +379,54 @@ class testFullRKPrbConversion(unittest.TestCase):
         options.configfilename="standardRK.conf"
         runTrajPrbAdd(options)
         outdata=numpy.loadtxt(options.outtrajfile,comments="#")
-        self.assertAlmostEqual(outdata[:,3].sum(),8100,delta=100)     
+        self.assertAlmostEqual(outdata[:,3].sum(),8100,delta=100) 
+
+    def test_trajClippingPhotonFlooding(self):
+        options = FakeOptionsRK()
+        options.pbfile="mixed.prb"
+        options.configfilename="standardRKclip.conf"
+        runTrajPrbAdd(options)
+        outdata=numpy.loadtxt(options.outtrajfile,comments="#")
+        self.assertEqual(len(outdata[:,3]),3760) 
+        
+class testFullRKPrbConversionMultiprocessing(unittest.TestCase):
+    def createTestTrajectories(self):
+        #high, no and average FRET
+        createConstantDummyRKTraj("high.npz", 1000, 10, 1, 4, fformat="numpy")
+        createConstantDummyRKTraj("low.npz", 1000, 10, 10, 0, fformat="numpy")
+        createConstantDummyRKTraj("aver.npz", 1000, 10, 4, 2./3, fformat="numpy")
+        createStepFunctionDummyRKTrajWithL("step.npz", 1000, 10, 0.5,4., 2./3, fformat="numpy")
+    
+        createConstantDummyRKTraj("high.dat", 1000, 10, 1, 4, fformat="plain")
+        createConstantDummyRKTraj("low.dat", 1000, 10, 10, 0, fformat="plain")
+        createConstantDummyRKTraj("aver.dat", 1000, 10, 4, 2./3, fformat="plain")
+        createStepFunctionDummyRKTrajWithL("step.dat", 1000, 10, 0.5,4., 2./3, fformat="plain")
+
+    def createProbabilityClassFiles(self):
+        createProbabilityClassFile("high.prb",("high","low","aver","step"),(1.0,0.0,0.0,0.0))    
+        createProbabilityClassFile("low.prb",("high","low","aver","step"),(0.0,1.0,0.0,0.0))
+        createProbabilityClassFile("aver.prb",("high","low","aver","step"),(0.0,0.0,1.0,0.0))
+        createProbabilityClassFile("mixed.prb",("high","low","aver","step"),(0.25,0.25,0.5,0.0))
+        createProbabilityClassFile("step.prb",("high","low","aver","step"),(0.0,0.0,0.0,1.0))
+        createProbabilityClassFile("invalid.prb",("high",),(1.0,))
+    
+    def setUp(self):
+        self.workdir=tempfile.mkdtemp()
+        self.prevdir=os.curdir
+        os.chdir(self.workdir)
+        self.createTestTrajectories()
+        self.createProbabilityClassFiles()
+        writeRKConfigFiles()
+        writeBurstFile()
+        writeInvalidBurstFile()
+        writeInvalidDummyFile()
+        
+    def test_trajPhotonFlooding(self):
+        options = FakeOptionsRK()
+        options.pbfile="mixed.prb"
+        options.configfilename="standardRKmulti.conf"
+        runTrajPrbAdd(options)
+        outdata=numpy.loadtxt(options.outtrajfile,comments="#")
+        self.assertAlmostEqual(outdata[:,3].sum(),16200,delta=100)
+
+                           

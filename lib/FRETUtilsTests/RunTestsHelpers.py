@@ -269,6 +269,25 @@ def writeRKConfigFiles():
         config.write(fh)
     finally:
         fh.close()  
+    
+    config.set('System','ncpu','-1')
+    config.set('Photon Flooding','photoncount','20')
+
+    try:
+        fh=open("standardRKmulti.conf","w")
+        config.write(fh)
+    finally:
+        fh.close() 
+    
+    config.set('System','ncpu','1')
+    config.set('Photon Flooding','photoncount','5')
+    config.set('Photon Flooding','startclip','20')
+    config.set('Photon Flooding','endclip','40')
+    try:
+        fh=open("standardRKclip.conf","w")
+        config.write(fh)
+    finally:
+        fh.close()  
 
 
 configfile="""[Dye Constants]

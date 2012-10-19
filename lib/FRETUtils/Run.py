@@ -54,8 +54,7 @@ def doMultiprocessRun(options, config, trajectories, eprobabilities):
     
     for ene,res in enumerate(results,start=1):
         bursts+=res.get()
-        print "\r%6d of %6d jobs processed."%(ene,blockcount),
-        
+        print "\r%6d of %6d jobs processed."%(ene,blockcount),        
     
     return bursts
 
@@ -165,8 +164,6 @@ def runMCFRET(options):
     trajectories, eprobabilities = readTrajAndClasses(options)   
     config = readConfigAndAssignFRETRate(options, trajectories)
     config.set("Burst Size Distribution", "bsdfile", options.expbfile)
-
-
     print 
     print "================================ Input prepared ========================="
     print 
@@ -194,19 +191,61 @@ def runMCFRET(options):
     if not options.prffile:
         writeOutputFiles(options, config, bursts)
 
+def runMultiprocessPhotonFlooding(trajectories,config):
+    ncpu = config.getint("System", "ncpu")
+
+    print "Preparing %d clients for burst generation." % ncpu
+    pool = multiprocessing.Pool(ncpu)
+
+    results=[]    
+    print "Setting up jobs for %d trajectories." % (len(trajectories))
+    for traj in trajectories:
+        verbose=0
+        trajs={}
+        trajs[traj]=trajectories[traj]
+        res= pool.apply_async(floodTrajsWithPhotons, (trajs, config,random.randint(0,sys.maxint),verbose))
+        results.append(res)
+              
+    bursts=[]
+    
+    for ene,res in enumerate(results,start=1):
+        restrajs = res.get()
+        for restraj in restrajs:
+            trajectories[restraj]=restrajs[restraj]
+        print "\r%6d of %6d jobs processed."%(ene,len(trajectories)),        
+    
+    return bursts    
+
+def runTrajPhotonFlooding(trajectories,config):
+    print 
+    print "================================ Input prepared ========================="
+    print 
+    print "Starting trajectory processing"
+    ncpu = config.getint("System", "ncpu")
+    if ncpu==-1:
+        print "Determining number of available cpu's..."
+        print "-> %d cpus detected" % multiprocessing.cpu_count()
+        ncpu=multiprocessing.cpu_count()
+        config.set("System", "ncpu","%d"%ncpu)
+           
+    if ncpu > 1:
+        runMultiprocessPhotonFlooding(trajectories,config)
+    
+    else:
+        print "Doing single process run."
+        trajectories=floodTrajsWithPhotons(trajectories,config,random.randint(0,sys.maxint),1)    
+
 def runTrajPrbAdd(options):
-    TODO: add multiprocessing
-    TODO: add clipping based on decay
     trajectories, eprobabilities = readTrajAndClasses(options)
     if options.configfilename:
         config = readConfigAndAssignFRETRate(options, trajectories)
-        floodTrajsWithPhotons(trajectories,config,random.randint(0,sys.maxint),1)
+        runTrajPhotonFlooding(trajectories,config)
     else:
         print "No config file specified, assigning class probabilities only."
     print "Writing to",options.outtrajfile
     try:
         fh=open(options.outtrajfile,"w")
-        writeRKProbTraj(fh,trajectories,eprobabilities)
+        writeRKProbTraj(fh,trajectories,eprobabilities,config)
     finally:
         fh.close()
         

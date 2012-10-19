@@ -13,8 +13,19 @@ import os,sys
 import random
 import numpy
 
-def writeRKProbTraj(fh,trajs,probabilities):
+def writeRKProbTraj(fh,trajs,probabilities,config):
     """writes time, distance, kappa and the total probability in an opened file handle"""
+    try:
+        startclip=config.getint("Photon Flooding","startclip")
+    except:
+        startclip=0
+    
+    try:
+        endclip=config.getint("Photon Flooding","endclip")
+    except:
+        endclip=0
+        
+    
     keys=trajs.keys()
     keys.sort()
     for key in keys:
@@ -23,10 +34,8 @@ def writeRKProbTraj(fh,trajs,probabilities):
             trajs[key]["photons"]=numpy.ones(len(trajs[key]["t"]))
         trajs[key]["photons"]=trajs[key]["photons"]*getTrajClassProbability(trajs[key],probabilities)
         arr=numpy.array((trajs[key]["t"],trajs[key]["R"],trajs[key]["k2"],trajs[key]["photons"]))
-        numpy.savetxt(fh,arr.T)
-        print key,"written with traj probability",getTrajClassProbability(trajs[key],probabilities)
-        
-              
+        numpy.savetxt(fh,arr.T[startclip:-endclip,:])
+        print key,"written with traj %s probability, clipping %d and %d frames at beginning and end."%(getTrajClassProbability(trajs[key],probabilities),startclip,endclip)
 
 def createTrajectoryList(rootdir,fformat):
     """creates a dictionary of all npz files in a given directory"""
@@ -133,6 +142,8 @@ def floodTrajsWithPhotons(trajs,config,randseed,verbose):
                     pass
                 if endndx!=traj["length"]:
                     traj["photons"][endndx]+=1
+                    
+    return trajs
 
                 
 
