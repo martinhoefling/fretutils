@@ -31,9 +31,6 @@ class Photon:
             else:
                 self.thermal=False  
 
-#def fretPotential2Rate(potential,spectraloverlap):
-#    """Converts the coupling potential (in J) and a spectral overlap to transition rate"""  
-#    return 1./(Constants.h_bar**2*Constants.c_light)*Helpers.JouleInNm(potential)*spectraloverlap
 
 def getPhoton(traj,conf,startndx=None):
     """Calculates a single photon with given configuration and trajectory, returns 1 for acceptor and 0 for donor photon"""
@@ -78,18 +75,6 @@ def rejectPhoton(starttime,endtime,traj,conf):
         return False
     return True
 
-#def getPhotonPBC(traj,conf,startndx=None):
-#    """calculates photons  and restarts from time 0 if at trajectory end, no photon rejection implemented here so far"""
-#    if not startndx:
-#        startndx=random.randint(0,int(len(traj["t"])-1))
-#    pDtot=(conf.getfloat("Dye Constants","kD")+conf.getfloat("Dye Constants","kDi"))*conf.getfloat("Monte Carlo","deltat")
-#    pRETpDtot=traj["pRETpDtot"]
-#    photon=-1
-#    while photon == -1:
-#        photon,endtime=_tryGetPhoton(pDtot,pRETpDtot,startndx,random.randint(0,sys.maxint))
-#        if photon ==-1:
-#            startndx=0
-#    return photon,endtime
 
 def tryPlainGetPhoton(p0,pvar,start,seed):
     """Try to generate a photon and returns 0 and 1 for donor and acceptor and -1 for failure"""
@@ -102,6 +87,8 @@ def tryPlainGetPhoton(p0,pvar,start,seed):
         
     return -1,len(pvar)
 
+#@UnresolvedImport
+#@UnusedVariable
 def setPhotonGenerator(config):
     """sets the photon generation routine (python or c-extension)"""
     global _tryGetPhoton
@@ -111,6 +98,7 @@ def setPhotonGenerator(config):
         _tryGetPhoton=tryPlainGetPhoton    
     elif config.get("System", "photongenerator")=="cextension":
         print "-> Using c-extension photon generator"
+
         from FRETUtils.fretnumpyext import tryGetCPhoton as _tryGetPhoton
     elif config.get("System", "photongenerator")=="cython":
         print "-> Using cython photon generator"
