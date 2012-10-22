@@ -9,6 +9,7 @@ import random
 import numpy
 
 from TransferMatrices import GlobalAVGKappaTransferMatrix, DistanceAVGKappaTransferMatrix, DistanceKappaTransferMatrix
+from TransferMatrixInversion import GaussianRegularizationDistanceReconstruction
 
 transferMatrices=("global","local","none")
 
@@ -74,7 +75,7 @@ def constructTM(options):
         raise ValueError("Invalid transfer matrix type selected") 
 
 def resolveDistances(options, TM, effhist):
-    if config.
+    return GaussianRegularizationDistanceReconstruction(options, TM, effhist)
 
 def writeDistances(distances,options):
     numpy.savetxt(options.outdistfile,distances)
