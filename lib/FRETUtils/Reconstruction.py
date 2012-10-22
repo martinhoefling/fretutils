@@ -74,7 +74,7 @@ def constructTM(options):
         raise ValueError("Invalid transfer matrix type selected") 
 
 def resolveDistances(options, TM, effhist):
-    pass
+    if config.
 
 def writeDistances(distances,options):
     numpy.savetxt(options.outdistfile,distances)

@@ -63,18 +63,17 @@ class GlobalAVGKappaTransferMatrix(TransferMatrix):
     def __init__(self,RBins,EffBins,BurstCount,burstGenerator, R0, RRange):
         TransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RRange)
        
-    def populateMatrixWithBursts(self,rbinindex,reff,bursts,weight):      
-        for size in bursts:
-            effval = genRandomBurstEff(reff, size)
-            effval = efficiencyDeltaFix(effval)
-            effndx = genEffIndex(effval,self.EffBins)
-            self.tm[rbinindex,effndx]+=weight
+    def populateMatrixWithBurst(self,rbinindex,reff,burst,weight):      
+        effval = genRandomBurstEff(reff, burst)
+        effval = efficiencyDeltaFix(effval)
+        effndx = genEffIndex(effval,self.EffBins)
+        self.tm[rbinindex,effndx]+=weight
     
     def populateMatrix(self,rbinindex):
-        reff,bursts = self.getBinEfficiencies(i)
+        reff,bursts = self.getBinEfficiencies(rbinindex)
         weight=1./len(reff)
-        for eff in zip(reff,bursts):
-            self.populateMatrixWithBursts(rbinindex, reff, bursts, weight)
+        for eff,burst in zip(reff,bursts):
+            self.populateMatrixWithBurst(rbinindex, eff, burst, weight)
 
     def getR0(self,binnr):
         return self.R0
@@ -86,7 +85,6 @@ class GlobalAVGKappaTransferMatrix(TransferMatrix):
         return [reff]*self.BurstCount,getBurstSizes(self.BurstCount,self.burstGenerator)
 
     def generateMatrix(self):
-        myrange=getRange(self.RRange)
         for i in range(self.RBins):
             self.populateMatrix(i)
        
@@ -106,7 +104,7 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
         self.kappaBinned=False
     
 
-    def addToBin(self, kappaavgnum, K, prb, Rind):
+    def addToBin(self, kappaavgnum, R, K, prb, Rind):
         self.kappaavg[Rind] += K * prb
         kappaavgnum[Rind] += prb
 
@@ -123,7 +121,7 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
             Rind = self.genRIndex(R)
             if Rind < 0 or Rind > self.RBins:
                 continue 
-            self.addToBin(kappaavgnum, K, prb, Rind)
+            self.addToBin(kappaavgnum, R, K, prb, Rind)
         
         self.kappaavg/=kappaavgnum
         self.kappaBinned=True
@@ -137,19 +135,19 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
         return self.kappaavg
 
 
-class DistanceKappaTransferMatrix(istanceAVGKappaTransferMatrix):    
+class DistanceKappaTransferMatrix(DistanceAVGKappaTransferMatrix):    
     def __init__(self,RBins,EffBins,BurstCount,burstGenerator,R0,RSamples,KappaSamples,SampleWeights,RRange=None):
-         DistanceKappaTransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RSamples, KappaSamples, SampleWeights, RRange)   
-         self.rkappaBinned = [ [] for i in range(RBins) ]
+        DistanceKappaTransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RSamples, KappaSamples, SampleWeights, RRange)   
+        self.rkappaBinned = [ [] for _i in range(RBins) ]
 
-    def addToBin(self, kappaavgnum, K, prb, Rind):
+    def addToBin(self, kappaavgnum, R, K, prb, Rind):
         super(DistanceKappaTransferMatrix,self).addToBin(kappaavgnum, K, prb, Rind)
         self.rkappaBinned[Rind].append((R,K,prb))
         
     def getBinEfficiencies(self, binnr):
         bursts=getBurstSizes(self.BurstCount,self.burstGenerator)
         beffs=[]
-        rkprb=np.arr(self.rkappaBinned[binnr])
+        rkprb=np.array(self.rkappaBinned[binnr])
         Rarr=rkprb[:0]
         Kappaarr=rkprb[:1]
         Prbarr=rkprb[:2]
@@ -158,7 +156,7 @@ class DistanceKappaTransferMatrix(istanceAVGKappaTransferMatrix):
         cumulprb=Prbarr.cumsum()
         cumulprb/=cumulprb[-1]
         for burst in bursts:
-            randnrs=numpy.random.random(len(burst))
+            randnrs=np.random.random(len(burst))
             ndxchoice=cumulprb.searchsorted(randnrs)
             effs=rToEff(Rarr[ndxchoice],R0_mod[ndxchoice])
             beffs.append(effs.mean())

@@ -53,7 +53,7 @@ def getPhoton(traj,conf,startndx=None):
     while photon == -1:
         rejectcount=0
         while rejectcount <= conf.getint("Monte Carlo","rejectretry"):
-            photon,endndx=tryGetPhoton(pDtot,pRETpDtot,startndx,random.randint(0,sys.maxint))
+            photon,endndx=_tryGetPhoton(pDtot,pRETpDtot,startndx,random.randint(0,sys.maxint))
 
             if not rejectPhoton(startndx,endndx,traj,conf):
                 duration=endndx-startndx
@@ -86,7 +86,7 @@ def rejectPhoton(starttime,endtime,traj,conf):
 #    pRETpDtot=traj["pRETpDtot"]
 #    photon=-1
 #    while photon == -1:
-#        photon,endtime=tryGetPhoton(pDtot,pRETpDtot,startndx,random.randint(0,sys.maxint))
+#        photon,endtime=_tryGetPhoton(pDtot,pRETpDtot,startndx,random.randint(0,sys.maxint))
 #        if photon ==-1:
 #            startndx=0
 #    return photon,endtime
@@ -104,18 +104,18 @@ def tryPlainGetPhoton(p0,pvar,start,seed):
 
 def setPhotonGenerator(config):
     """sets the photon generation routine (python or c-extension)"""
-    global tryGetPhoton
+    global _tryGetPhoton
     print "Determining MC routine generation routine..."
     if config.get("System", "photongenerator")=="python":
         print "-> Using photon generator in plain python"
-        tryGetPhoton=tryPlainGetPhoton    
+        _tryGetPhoton=tryPlainGetPhoton    
     elif config.get("System", "photongenerator")=="cextension":
         print "-> Using c-extension photon generator"
-        from FRETUtils.fretnumpyext import tryGetCPhoton as tryGetPhoton
+        from FRETUtils.fretnumpyext import tryGetCPhoton as _tryGetPhoton
     elif config.get("System", "photongenerator")=="cython":
         print "-> Using cython photon generator"
-        from FRETUtils.PhotonGenerator import tryGetCythonPhoton as tryGetPhoton        
+        from FRETUtils.PhotonGenerator import tryGetCythonPhoton as _tryGetPhoton        
     else:
         raise ValueError("Invalid photon generator %s"%config.get("System", "photongenerator"))
 
-tryGetPhoton=tryPlainGetPhoton
+_tryGetPhoton=tryPlainGetPhoton
