@@ -244,6 +244,8 @@ def runTrajPrbAdd(options):
         runTrajPhotonFlooding(trajectories,config)
     else:
         print "No config file specified, assigning class probabilities only."
+        config = None
+        
     print "Writing to",options.outtrajfile
     try:
         fh=open(options.outtrajfile,"w")
@@ -255,7 +257,7 @@ def runReconstruction(options):
     if options.rseed:
         print "Setting up RNG seed to %d" % options.rseed
         random.seed(options.rseed)
-    effhist=readEfficiencies(options.efficiencyfile,options.efficiencybins)
+    effhist=readEfficiencies(options.efficiencyfile,int(options.efficiencybins))
     TM = constructTM(options)
-    distances = resolveDistances(options,TM,effhist)
-    writeDistances(distances)
+    r_prdist,xrange,e_fitprdist,fitvals = resolveDistances(options,TM,effhist)
+    writeDistances(xrange,r_prdist,options)

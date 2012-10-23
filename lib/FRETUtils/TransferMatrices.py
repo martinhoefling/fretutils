@@ -11,17 +11,18 @@ from FRETUtils.Bursts import getBurstSizes
 import numpy as np
 from FRETUtils.Helpers import rToEff
 from FRETUtils.Efficiencies import efficiencyDeltaFix
+from matplotlib import pyplot as plt
+from matplotlib import cm as cm
 
 
-
-def generateBinMid(self, myrange, i,RBins, RStart):
-    binmid = (i + 0.5) * myrange / RBins + RStart
+def generateBinMid(myrange, ind,RBins, RStart):
+    binmid = (ind + 0.5) * myrange / RBins + RStart
     return binmid
 
-def genRandomBurstEff(reff, size):
+def genRandomBurstEffs(reff, size):
     randnrs = np.random.random(size)
-    nacc = randnrs < reff.sum()
-    effval = nacc / size
+    nacc = randnrs < reff
+    effval = nacc.sum() / size
     return effval
 
 def genEffIndex(effval,EffBins):
@@ -57,6 +58,27 @@ class TransferMatrix(object):
         if not self.matrixGenerated:
             self.generateMatrix()
         return self.tm
+    
+    def plot(self):
+        xdist = np.linspace(self.RRange[0]+self.myrange/self.RBins/2,self.RRange[1]-self.myrange/self.RBins/2,self.RBins)
+        xeff = np.linspace(0., 1., self.EffBins, endpoint=False) + 1. / self.EffBins / 2
+        
+        xfifth=self.RBins/5
+        yfifth=self.EffBins/5
+        maxscale = self.tm[xfifth:-xfifth,yfifth:-yfifth].max()
+        plt.imshow(self.tm.T, interpolation='nearest', aspect="auto", origin="lower", cmap=cm.jet, vmin=self.tm.min(), vmax=maxscale)
+        plt.xlabel("Distance")
+        plt.ylabel("Efficiency")
+        nrlabels = 4
+        nrx = len(xdist)
+        nre = len(xeff)
+        stepx = nrx / nrlabels
+        stepe = nre / nrlabels
+        ndxx = (np.arange(nrx) % stepx == 0).nonzero()
+        ndxe = (np.arange(nre) % stepe == 0).nonzero()
+        plt.xticks(np.arange(len(xdist))[ndxx], xdist[ndxx])
+        plt.yticks((xeff * len(xeff))[ndxe], xeff[ndxe])
+
 
 
 class GlobalAVGKappaTransferMatrix(TransferMatrix):
@@ -64,8 +86,8 @@ class GlobalAVGKappaTransferMatrix(TransferMatrix):
         TransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RRange)
        
     def populateMatrixWithBurst(self,rbinindex,reff,burst,weight):      
-        effval = genRandomBurstEff(reff, burst)
-        effval = efficiencyDeltaFix(effval)
+        effval = genRandomBurstEffs(reff, burst)
+        effval = efficiencyDeltaFix((effval,))
         effndx = genEffIndex(effval,self.EffBins)
         self.tm[rbinindex,effndx]+=weight
     
@@ -93,11 +115,11 @@ class GlobalAVGKappaTransferMatrix(TransferMatrix):
 class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
     def __init__(self,RBins,EffBins,BurstCount,burstGenerator,R0,RSamples,KappaSamples,SampleWeights,RRange=None):        
         if not RRange:
-            GlobalAVGKappaTransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, (RSamples.min(),RSamples.max()))
+            GlobalAVGKappaTransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, (RSamples.min(),RSamples.max()))
         else:
             GlobalAVGKappaTransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RRange)        
         self.RSamples=RSamples
-        self.KSamples=KappaSamples
+        self.KappaSamples=KappaSamples
         self.SampleWeights=SampleWeights
         
         self.kappaavg=np.zeros((RBins),np.float64)
@@ -107,7 +129,6 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
     def addToBin(self, kappaavgnum, R, K, prb, Rind):
         self.kappaavg[Rind] += K * prb
         kappaavgnum[Rind] += prb
-
 
     def genRIndex(self, R):
         Rind = int((R - self.RRange[0]) / (self.myrange / self.RBins))
@@ -123,10 +144,18 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
                 continue 
             self.addToBin(kappaavgnum, R, K, prb, Rind)
         
+        self.binKappaSanityCheck(kappaavgnum)
         self.kappaavg/=kappaavgnum
         self.kappaBinned=True
+    
+    def binKappaSanityCheck(self,kappaavgnum):
+        if not (kappaavgnum>0).all():
+            raise ValueError("Not all kappa bins have at least one sample. Adjust number of distance-bins or distance range")
+        print "There are at least %d kappa samples in each r-bin."%kappaavgnum.min()
      
     def getR0(self,binnr):
+        if not self.kappaBinned:
+            self.binKappa()
         return modifyR0(self.R0, self.kappaavg[binnr])
         
     def getKappaAVG(self):
@@ -137,26 +166,33 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
 
 class DistanceKappaTransferMatrix(DistanceAVGKappaTransferMatrix):    
     def __init__(self,RBins,EffBins,BurstCount,burstGenerator,R0,RSamples,KappaSamples,SampleWeights,RRange=None):
-        DistanceKappaTransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RSamples, KappaSamples, SampleWeights, RRange)   
+        DistanceAVGKappaTransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RSamples, KappaSamples, SampleWeights, RRange)   
         self.rkappaBinned = [ [] for _i in range(RBins) ]
 
     def addToBin(self, kappaavgnum, R, K, prb, Rind):
-        super(DistanceKappaTransferMatrix,self).addToBin(kappaavgnum, K, prb, Rind)
+        super(DistanceKappaTransferMatrix,self).addToBin(kappaavgnum, R, K, prb, Rind)
         self.rkappaBinned[Rind].append((R,K,prb))
         
     def getBinEfficiencies(self, binnr):
+        if not self.kappaBinned:
+            self.binKappa()
+            
+        if len(self.rkappaBinned[binnr])==0:
+            raise ValueError("Bin #%d is empty. This is a problem. Try setting a smaller range and fewer bins in R-direction."%binnr)
+            
         bursts=getBurstSizes(self.BurstCount,self.burstGenerator)
         beffs=[]
+        
         rkprb=np.array(self.rkappaBinned[binnr])
-        Rarr=rkprb[:0]
-        Kappaarr=rkprb[:1]
-        Prbarr=rkprb[:2]
+        Rarr=rkprb[:,0]
+        Kappaarr=rkprb[:,1]
+        Prbarr=rkprb[:,2]
         R0_mod=modifyR0(self.R0,Kappaarr)
 
         cumulprb=Prbarr.cumsum()
         cumulprb/=cumulprb[-1]
         for burst in bursts:
-            randnrs=np.random.random(len(burst))
+            randnrs=np.random.random(burst)
             ndxchoice=cumulprb.searchsorted(randnrs)
             effs=rToEff(Rarr[ndxchoice],R0_mod[ndxchoice])
             beffs.append(effs.mean())

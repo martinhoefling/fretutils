@@ -15,16 +15,19 @@ import numpy
 
 def writeRKProbTraj(fh,trajs,probabilities,config):
     """writes time, distance, kappa and the total probability in an opened file handle"""
-    try:
-        startclip=config.getint("Photon Flooding","startclip")
-    except:
-        startclip=0
-    
-    try:
-        endclip=config.getint("Photon Flooding","endclip")
-    except:
-        endclip=0
+    if config:
+        try:
+            startclip=config.getint("Photon Flooding","startclip")
+        except:
+            startclip=0
         
+        try:
+            endclip=config.getint("Photon Flooding","endclip")
+        except:
+            endclip=0
+    else:
+        startclip=0
+        endclip=0     
     
     keys=trajs.keys()
     keys.sort()
@@ -34,8 +37,12 @@ def writeRKProbTraj(fh,trajs,probabilities,config):
             trajs[key]["photons"]=numpy.ones(len(trajs[key]["t"]))
         trajs[key]["photons"]=trajs[key]["photons"]*getTrajClassProbability(trajs[key],probabilities)
         arr=numpy.array((trajs[key]["t"],trajs[key]["R"],trajs[key]["k2"],trajs[key]["photons"]))
-        numpy.savetxt(fh,arr.T[startclip:-endclip,:])
-        print key,"written with traj %s probability, clipping %d and %d frames at beginning and end."%(getTrajClassProbability(trajs[key],probabilities),startclip,endclip)
+        if endclip==0:
+            numpy.savetxt(fh,arr.T[startclip:,:])
+        else:
+            numpy.savetxt(fh,arr.T[startclip:-endclip,:])
+            
+        print key,"written with traj %s probability with length %d, clipping %d and %d frames at beginning and end."%(getTrajClassProbability(trajs[key],probabilities),trajs[key]["length"],startclip,endclip)
 
 def createTrajectoryList(rootdir,fformat):
     """creates a dictionary of all npz files in a given directory"""
@@ -144,18 +151,3 @@ def floodTrajsWithPhotons(trajs,config,randseed,verbose):
                     traj["photons"][endndx]+=1
                     
     return trajs
-
-                
-
-        
-        
-        
-        
-    
-#def getTrajWeight(trajs,key,prb):
-#    """Calculates the trajectory weight in the full ensemble using the probability of the class of the trajectory and the trajectory class sample count"""
-#    return getTrajClassProbability(trajs[key],prb)*(float(trajs[key]["length"])/getClassTrajSamples(trajs[key]["species"],trajs))
-#    
-#def getTrajWeightArray(traj,key,prb):
-#    """Creates an array with trajectory ensemble weight as constant value"""
-#    return zeros(len(traj[key]["R"])) + getTrajWeight(traj,key,prb) 

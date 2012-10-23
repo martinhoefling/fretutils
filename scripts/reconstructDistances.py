@@ -14,29 +14,29 @@ def getCmdlineOptions():
                       help="file with burst efficiencies", default="effs.txt")
     group1.add_option("-t", "--transferMatrix", dest="transferMatrix",
                       help="transfer Matrix type from global kappa^2 average (global), distance dependent kappa^2 average (local) or no averaging (none)", default="global")
-    group1.add_option("-R0", "--R0", dest="foesterRadius",
+    group1.add_option("--R0", dest="R0",
                       help="Foerster Radius including kappa=2/3", default=None, metavar=5.4)
     group1.add_option("-b", "--burst-count", dest="burstCount",
                       help="Burst count per distance bin", default=40)
     
     group2 = OptionGroup(parser, "Optional input")
-    group2.add_option("-bs", "--burst-minsize", dest="burstMinsize",
+    group2.add_option("--bs", "--burst-minsize", dest="burstMinsize",
                       help="Minimal burstsize (when no experimental burstsize file is provided)", default=20)
-    group2.add_option("-be", "--burst-maxsize", dest="burstMaxsize",
+    group2.add_option("--be", "--burst-maxsize", dest="burstMaxsize",
                       help="Maximal burstsize (when no experimental burstsize file is provided)", default=100)
-    group2.add_option("-ba", "--burst-exponent", dest="burstLambda",
+    group2.add_option("--ba", "--burst-exponent", dest="burstLambda",
                       help="Analytical burstsize function exponent", default=-2.3)    
     group2.add_option("-k", "--expbursts",dest="expbfile", 
                       help="experimental bursts size distribution file", default = None,metavar="exp.dat")    
     group2.add_option("-r", "--rkappa", dest="rkappafile",
                       help="file with r kappa (and probabilities)", default="rkappaprb.txt")    
-    group2.add_option("-eb", "--efficiency-bins",dest="efficiencybins", 
+    group2.add_option("--eb", "--efficiency-bins",dest="efficiencybins", 
                       help="efficiency bin count", default = 50)
-    group2.add_option("-rb", "--distance-bins",dest="distancebins", 
+    group2.add_option("--rb", "--distance-bins",dest="distancebins", 
                       help="distance bin count", default = 100)
-    group2.add_option("-rs", "--distance-start",dest="distancestart", 
+    group2.add_option("--rs", "--distance-start",dest="distancestart", 
                       help="distance range start", default = None)
-    group2.add_option("-re", "--distance-end",dest="distanceend", 
+    group2.add_option("--re", "--distance-end",dest="distanceend", 
                       help="distance range end", default = None)
 
     

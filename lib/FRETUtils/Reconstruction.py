@@ -27,7 +27,7 @@ def getFitBurstgen(burstsmin,burstsmax,exp=-2.3):
 
 def readEfficiencies(efficiencyfile, efficiencybins):
     effs=numpy.loadtxt(efficiencyfile)
-    effhist = numpy.histogram(effs, efficiencybins, (0.,1.), normed=True)
+    effhist,_bins = numpy.histogram(effs, bins=efficiencybins, range=(0.,1.), normed=True)
     return effhist
 
 def readRKPrbSamples(rkappafile):
@@ -36,19 +36,29 @@ def readRKPrbSamples(rkappafile):
     return arr[:,1],arr[:,2],arr[:,3]
 
 def constructGlobalTM(options,burstGenerator):
-    TM = GlobalAVGKappaTransferMatrix(options.distancebins,options.efficiencybins,options.burstcount,burstGenerator, options.R0, (options.distancestart,options.distanceend))
-    return TM.getMatrix()
+    TM = GlobalAVGKappaTransferMatrix(int(options.distancebins),int(options.efficiencybins),int(options.burstCount),burstGenerator, float(options.R0), (float(options.distancestart),float(options.distanceend)))
+    return TM
 
-def constructNonGlobalTM(TMType,options,burstGenerator):
+def getRange(options):
     if options.distancestart and options.distanceend:
-        myrange=(options.distancestart,options.distanceend)
+        myrange = float(options.distancestart), float(options.distanceend)
     elif not options.distancestart and not options.distanceend:
-        myrange=None
+        myrange = None
     else:
         raise ValueError("Specify distance range by using both, -rs and -re or none of both (autodetect from -r file).")
+    return myrange
+
+def constructNonGlobalTM(TMType,options,burstGenerator):
+    myrange = getRange(options)
+
     RSamples,KappaSamples,SampleWeights = readRKPrbSamples(options.rkappafile)
-    TM = TMType(options.distancebins,options.efficiencybins,options.burstcount,burstGenerator, options.R0,RSamples,KappaSamples,SampleWeights,RRange=myrange)
-    return TM.getMatrix()
+    
+    if not myrange:
+        options.distancestart=RSamples.min()
+        options.distanceend=RSamples.max()
+        
+    TM = TMType(int(options.distancebins),int(options.efficiencybins),int(options.burstCount),burstGenerator, float(options.R0),RSamples,KappaSamples,SampleWeights,RRange=myrange)
+    return TM
 
 def constructLocalTM(options,burstGenerator):
     return constructNonGlobalTM(DistanceAVGKappaTransferMatrix,options,burstGenerator)
@@ -61,7 +71,7 @@ def getBurstGenerator(options):
     if options.expbfile:
         return getExpBurstgen(options.expbfile)
     else:
-        return getFitBurstgen(options.burstMinsize, options.burstMaxsize, options.burstLambda)
+        return getFitBurstgen(int(options.burstMinsize), int(options.burstMaxsize), float(options.burstLambda))
 
 def constructTM(options):
     burstgen = getBurstGenerator(options)
@@ -77,5 +87,6 @@ def constructTM(options):
 def resolveDistances(options, TM, effhist):
     return GaussianRegularizationDistanceReconstruction(options, TM, effhist)
 
-def writeDistances(distances,options):
-    numpy.savetxt(options.outdistfile,distances)
+def writeDistances(xvrange,distances,options):
+    arr=numpy.array((xvrange,distances))
+    numpy.savetxt(options.outdistfile,arr.T)
