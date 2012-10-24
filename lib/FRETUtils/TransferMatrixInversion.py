@@ -7,7 +7,7 @@ Created on 15.10.2012
 '''
 
 import numpy
-from openopt import GLP
+from openopt import GLP,NLP
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -124,7 +124,26 @@ def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime):
 
     print "Starting openopt ##########################"
     prob = GLP(minfuncwrap,lb=lbounds,ub=ubounds,callback=mycallback,maxFunEvals=1e15,maxNonSuccess=200,maxIter=1e5,maxTime=gmaxtime)
-    result=prob.solve('de',population=100*len(lbounds))
+    result=prob.solve('de',population=1000*len(lbounds))
+    #result=prob.solve('asa')
+    #result=prob.solve('galileo') # not good
+    #result=prob.solve('pswarm')
+    #prob = GLP(minfuncwrap,lb=lbounds,ub=ubounds,callback=mycallback,maxNonSuccess=200,maxIter=1e5,maxTime=gmaxtime)
+    #result=prob.solve('isres',population=100*len(lbounds))
+    #prob = NLP(minfuncwrap,lb=lbounds,ub=ubounds,callback=mycallback,maxNonSuccess=200,maxIter=1e5,maxTime=gmaxtime)
+    #result=prob.solve('scipy_lbfgsb')
+    #result=prob.solve('scipy_tnc')
+    #result=prob.solve('bobyqa')
+    #result=prob.solve('ptn')
+    #result=prob.solve('slmvm1')
+    #result=prob.solve('slmvm2')
+    #result=prob.solve('ralg')
+    #result=prob.solve('scipy_cobyla') #good!!
+    #result=prob.solve('mma')
+    #result=prob.solve('auglag')
+    #result=prob.solve('gsubg')
+
+    
     xopt=result.xf
     print "Minimum function chisq",result.ff 
             
