@@ -25,16 +25,13 @@ def GaussianRegularizationDistanceReconstruction(options, TM, effhist):
 
     Rmin=options.distancestart
     Rmax=options.distanceend
-#    Rmin=2.
-#    Rmax=10.
-
     grmin=Rmin
     grmax=Rmax
     gsigmin=0.1
     gsigmax=4.
     gamin=0.2
     gamax=1.
-    ngauss = 3
+    ngauss = 2
 
     maxtime=100
     lbounds = [gamin] * ngauss + [grmin] * ngauss + [gsigmin] * ngauss
@@ -127,7 +124,7 @@ def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime):
 
     print "Starting openopt ##########################"
     prob = GLP(minfuncwrap,lb=lbounds,ub=ubounds,callback=mycallback,maxFunEvals=1e15,maxNonSuccess=200,maxIter=1e5,maxTime=gmaxtime)
-    result=prob.solve('de')#,population=100*len(lbounds))
+    result=prob.solve('de',population=100*len(lbounds))
     xopt=result.xf
     print "Minimum function chisq",result.ff 
             

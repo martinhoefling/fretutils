@@ -108,6 +108,7 @@ class GlobalAVGKappaTransferMatrix(TransferMatrix):
 
     def generateMatrix(self):
         for i in range(self.RBins):
+            print "Generating Matrix column %d of %d"%(i,self.RBins)
             self.populateMatrix(i)
        
         self.matrixGenerated=True

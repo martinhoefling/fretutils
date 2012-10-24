@@ -18,6 +18,7 @@ import multiprocessing
 from numpy import array,savetxt
 from FRETUtils.Reconstruction import readEfficiencies, constructTM,\
     resolveDistances, writeDistances
+import os
 
 def getFRETConfig(conffile):
     config = ConfigParser.ConfigParser()
@@ -253,11 +254,28 @@ def runTrajPrbAdd(options):
     finally:
         fh.close()
 
+def validateOptions(options):
+    if not options.efficiencyfile:
+        print "No efficiency file (-e) specified."
+        sys.exit(1)
+    if not os.path.exists(options.efficiencyfile):
+        print "Efficiency file %s does not exist."%options.efficiencyfile
+        sys.exit(1)
+    if not options.transferMatrix:
+        print "No transfer matrix type (-t) specified."
+        sys.exit(1)
+    if not options.R0:
+        print "No Foerster Radius (--R0) specified."
+        sys.exit(1)
+    
+        
+    
+
 def runReconstruction(options):
     if options.rseed:
         print "Setting up RNG seed to %d" % options.rseed
         random.seed(options.rseed)
-    effhist=readEfficiencies(options.efficiencyfile,int(options.efficiencybins))
+    effhist=readEfficiencies(options.efficiencyfile,options.efficiencybins)
     TM = constructTM(options)
     r_prdist,xrange,e_fitprdist,fitvals = resolveDistances(options,TM,effhist)
     writeDistances(xrange,r_prdist,options)

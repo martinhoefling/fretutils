@@ -7,6 +7,7 @@ from FRETUtils.Bursts import readBurstSizes, genPowerlawTable,\
     getAcceptRejectBurst
 import random
 import numpy
+import sys
 
 from TransferMatrices import GlobalAVGKappaTransferMatrix, DistanceAVGKappaTransferMatrix, DistanceKappaTransferMatrix
 from TransferMatrixInversion import GaussianRegularizationDistanceReconstruction
@@ -36,7 +37,11 @@ def readRKPrbSamples(rkappafile):
     return arr[:,1],arr[:,2],arr[:,3]
 
 def constructGlobalTM(options,burstGenerator):
-    TM = GlobalAVGKappaTransferMatrix(int(options.distancebins),int(options.efficiencybins),int(options.burstCount),burstGenerator, float(options.R0), (float(options.distancestart),float(options.distanceend)))
+    if not options.distancestart or not options.distanceend:
+        print "Distance start (--rs) and end (--re) not specified."
+        sys.exit(1)
+        
+    TM = GlobalAVGKappaTransferMatrix(options.distancebins,options.efficiencybins,options.burstCount,burstGenerator, options.R0, options.distancestart,options.distanceend)
     return TM
 
 def getRange(options):
@@ -57,7 +62,7 @@ def constructNonGlobalTM(TMType,options,burstGenerator):
         options.distancestart=RSamples.min()
         options.distanceend=RSamples.max()
         
-    TM = TMType(int(options.distancebins),int(options.efficiencybins),int(options.burstCount),burstGenerator, float(options.R0),RSamples,KappaSamples,SampleWeights,RRange=myrange)
+    TM = TMType(options.distancebins,options.efficiencybins,options.burstCount,burstGenerator, options.R0,RSamples,KappaSamples,SampleWeights,RRange=myrange)
     return TM
 
 def constructLocalTM(options,burstGenerator):
@@ -71,7 +76,7 @@ def getBurstGenerator(options):
     if options.expbfile:
         return getExpBurstgen(options.expbfile)
     else:
-        return getFitBurstgen(int(options.burstMinsize), int(options.burstMaxsize), float(options.burstLambda))
+        return getFitBurstgen(options.burstMinsize, options.burstMaxsize, options.burstLambda)
 
 def constructTM(options):
     burstgen = getBurstGenerator(options)
