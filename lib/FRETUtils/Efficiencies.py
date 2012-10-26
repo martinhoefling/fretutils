@@ -16,22 +16,22 @@ import sys
 def calcKineticRatesFromConfig(config):
     """calculates and sets the donor and acceptor kinetic rate constants in configuration, based on quantum yield and lifetime set in configuration"""
     print "Calculating the rates for the kinetics:"
-    QD=config.getfloat("Dye Constants","QD")
-    tauD=config.getfloat("Dye Constants","tauD")
-    QA=config.getfloat("Dye Constants","QA")
-    tauA=config.getfloat("Dye Constants","tauA")
+    QD=config.get("Dye Constants","QD")
+    tauD=config.get("Dye Constants","tauD")
+    QA=config.get("Dye Constants","QA")
+    tauA=config.get("Dye Constants","tauA")
     kDtot=1/tauD
     kAtot=1/tauA
     kD=QD/tauD
     kA=QA/tauA
     kDi=(1-QD)/tauD
     kAi=(1-QA)/tauA
-    config.set("Dye Constants","kDtot","%g"%kDtot)
-    config.set("Dye Constants","kAtot","%g"%kAtot)
-    config.set("Dye Constants","kD","%g"%kD)
-    config.set("Dye Constants","kA","%g"%kA)
-    config.set("Dye Constants","kDi","%g"%kDi)
-    config.set("Dye Constants","kAi","%g"%kAi)
+    config.sethidden("Dye Constants","kDtot","%g"%kDtot,float)
+    config.sethidden("Dye Constants","kAtot","%g"%kAtot,float)
+    config.sethidden("Dye Constants","kD","%g"%kD,float)
+    config.sethidden("Dye Constants","kA","%g"%kA,float)
+    config.sethidden("Dye Constants","kDi","%g"%kDi,float)
+    config.sethidden("Dye Constants","kAi","%g"%kAi,float)
     print "#################### DYE CONSTANTS ################"
     print "Type  \tDonor   \tAcceptor  "
     print "Qy    \t%8.2f\t%8.2f\t"%(QD,QA)
@@ -44,21 +44,18 @@ def efficiencyDeltaFix(efficiencies,delta=0.00001):
     """returns an efficiency array with small offset delta in both direction, preventing problems at bin borders"""
     return efficiencies+nprand.rand(len(efficiencies))*2*delta-delta
     
-def calculateBursts(traj,eprob,conf,nbursts,randseed,verbose):
+def calculateBursts(traj,eprob,conf,nbursts,randseed):
     """calculates efficiencies from trajectories with given probabilities and given configuration, here the burst sizes are determined"""  
     pyrand.seed(randseed)
     nprand.seed(pyrand.randint(0,sys.maxint))
-    conf.set("System","verbose","%d"%verbose)
-    if verbose:
-        print "Will calculate efficiencies from",nbursts,"bursts."
-        print "Setting up burst generator."
+    verbose = conf.get("System","verbose")
     #chose burst size generation method
     if conf.get("Burst Size Distribution","method") == "analytical":
         if verbose:
             print "-> Generating burst sizes from analytical function (powerlaw)"
-        mina=conf.getint("Burst Size Distribution","llimit")
-        maxa=conf.getint("Burst Size Distribution","ulimit")              
-        bstable=genPowerlawTable(mina,maxa,conf.getfloat("Burst Size Distribution","lambda"))
+        mina=conf.get("Burst Size Distribution","llimit")
+        maxa=conf.get("Burst Size Distribution","ulimit")              
+        bstable=genPowerlawTable(mina,maxa,conf.get("Burst Size Distribution","lambda"))
         burstGenerator = lambda : getAcceptRejectBurst(bstable,mina,maxa)
         
     elif conf.get("Burst Size Distribution","method") == "file":
@@ -81,7 +78,7 @@ def calculateBursts(traj,eprob,conf,nbursts,randseed,verbose):
 
 def getBursts(traj,eprob,conf,burstsizelist):
     """uses given burstsizes and calls for each burst the calculation of efficiencies using trajectories, probabilities and configuration."""
-    verbose=conf.getint("System","verbose")
+    verbose=conf.get("System","verbose")
     if verbose:
         print "Initializing bursts"
     bursts=[]
@@ -120,12 +117,9 @@ def generateBurst(trajs,eprob,conf,burst):
 
 
 def setUpBurstGeneration(conf):
-    try:
-        globalreject = conf.getint("Monte Carlo","globalrejectretry")
-    except:
-        globalreject = 100000
-    QD = conf.getfloat("Dye Constants", "QD")
-    QA = conf.getfloat("Dye Constants", "QA")
+    globalreject = conf.get("Monte Carlo","globalrejectretry")
+    QD = conf.get("Dye Constants", "QD")
+    QA = conf.get("Dye Constants", "QA")
     if conf.get("Burst Size Distribution", "apply") == "corrected":
         applycorrectedcutoff = True
     elif conf.get("Burst Size Distribution", "apply") == "true-photon":

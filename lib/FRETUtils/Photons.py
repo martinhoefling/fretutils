@@ -37,19 +37,19 @@ def getPhoton(traj,conf,startndx=None):
 
     if not startndx:
         try:
-            startndx=random.randint(conf.getint("Monte Carlo","minstarttraj"),int(len(traj["t"])-conf.getint("Monte Carlo","maxstarttraj")))
+            startndx=random.randint(conf.get("Monte Carlo","minstarttraj"),int(len(traj["t"])-conf.get("Monte Carlo","maxstarttraj")))
         except ValueError:
-            raise IndexError("Invalid range for startindex generation %d, %d. Adjust minstarttraj and maxstarttraj parameters."%(conf.getint("Monte Carlo","minstarttraj"),len(traj["t"])-conf.getint("Monte Carlo","maxstarttraj")))
+            raise IndexError("Invalid range for startindex generation %d, %d. Adjust minstarttraj and maxstarttraj parameters."%(conf.get("Monte Carlo","minstarttraj"),len(traj["t"])-conf.get("Monte Carlo","maxstarttraj")))
     
     if not -1 < startndx < int(len(traj["t"])):
         raise IndexError("Start index outside of trajectory length. Adjust minstarttraj and maxstarttraj parameters.")
     
-    pDtot=(conf.getfloat("Dye Constants","kD")+conf.getfloat("Dye Constants","kDi"))*conf.getfloat("Monte Carlo","deltat")
+    pDtot=(conf.get("Dye Constants","kD")+conf.get("Dye Constants","kDi"))*conf.get("Monte Carlo","deltat")
     pRETpDtot=traj["pRETpDtot"]
     photon=-1
     while photon == -1:
         rejectcount=0
-        while rejectcount <= conf.getint("Monte Carlo","rejectretry"):
+        while rejectcount <= conf.get("Monte Carlo","rejectretry"):
             photon,endndx=_tryGetPhoton(pDtot,pRETpDtot,startndx,random.randint(0,sys.maxint))
 
             if not rejectPhoton(startndx,endndx,traj,conf):
@@ -59,7 +59,7 @@ def getPhoton(traj,conf,startndx=None):
                     donor=True
                 else:
                     donor=False
-                return Photon(donor,endndx*conf.getfloat("Monte Carlo","deltat"),duration*conf.getfloat("Monte Carlo","deltat"))
+                return Photon(donor,endndx*conf.get("Monte Carlo","deltat"),duration*conf.get("Monte Carlo","deltat"))
             else:
                 rejectcount+=1  
         raise ValueError("Reject count reached")
@@ -69,9 +69,9 @@ def rejectPhoton(starttime,endtime,traj,conf):
     """tests if the photon has to be rejected, based on given starttime, endtime, trajectory and configuration"""
     if not traj.has_key("R_min"):
         traj["R_min"]=traj["R"].min()
-    if conf.getfloat("Monte Carlo","photrejectdist") < traj["R_min"]:
+    if conf.get("Monte Carlo","photrejectdist") < traj["R_min"]:
         return False #no rejection possible for this trajecotry, since all distances are larger 
-    if traj["R"][starttime:endtime-+1].min() > conf.getfloat("Monte Carlo","photrejectdist"):
+    if traj["R"][starttime:endtime-+1].min() > conf.get("Monte Carlo","photrejectdist"):
         return False
     return True
 

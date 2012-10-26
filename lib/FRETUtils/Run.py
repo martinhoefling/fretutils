@@ -8,9 +8,8 @@ from FRETUtils.Efficiencies import calculateBursts,calcKineticRatesFromConfig
 from FRETUtils.Ensemble import readProbabilities,assignTrajProbabilityClasses,cleanProbabilities
 from FRETUtils.Photons import setPhotonGenerator
 from FRETUtils.Trajectories import createTrajectoryList,readTrajs,calcFRETRates,writeRKProbTraj,floodTrajsWithPhotons
+from FRETUtils.Config import FRETConfigParser as ConfigParser
 
-
-import ConfigParser
 import random
 import sys
 import cPickle
@@ -21,23 +20,23 @@ from FRETUtils.Reconstruction import readEfficiencies, constructTM,\
 import os
 
 def getFRETConfig(conffile):
-    config = ConfigParser.ConfigParser()
+    config = ConfigParser()
     config.readfp(open(conffile))
     return config
 
 def doMultiprocessRun(options, config, trajectories, eprobabilities):
-    ncpu = config.getint("System", "ncpu")
+    ncpu = config.get("System", "ncpu")
 
     print "Preparing %d clients for burst generation." % ncpu
     pool = multiprocessing.Pool(ncpu)
     
     results=[]
          
-    nbursts = config.getint("Monte Carlo", "nbursts")
+    nbursts = config.get("Monte Carlo", "nbursts")
     print "Total bursts to calculate:",nbursts
  
     try:
-        blocksize = config.getint("System", "blocksize")
+        blocksize = config.get("System", "blocksize")
     except:
         blocksize = 100
         print "Using default blocksize of", blocksize,"for each job."
@@ -47,10 +46,12 @@ def doMultiprocessRun(options, config, trajectories, eprobabilities):
     blocks=[blocksize]*blockcount
     blocks.append(remainder)
     print "Setting up %d jobs to generate %d bursts" % (blockcount,nbursts)
+    config.set("System","verbose",0)
+        
     for block in blocks:
-        verbose=0
         options.rseed = random.randint(0, sys.maxint)
-        res= pool.apply_async(calculateBursts, (trajectories, eprobabilities, config,block,random.randint(0,sys.maxint),verbose))
+        config.makeReadonly()
+        res= pool.apply_async(calculateBursts, (trajectories, eprobabilities, config,block,random.randint(0,sys.maxint)))
         results.append(res)
               
     bursts=[]
@@ -62,8 +63,8 @@ def doMultiprocessRun(options, config, trajectories, eprobabilities):
     return bursts
 
 def efficienciesFromBursts(config,bursts):
-    QD=config.getfloat("Dye Constants","QD")
-    QA=config.getfloat("Dye Constants","QA")
+    QD=config.get("Dye Constants","QD")
+    QA=config.get("Dye Constants","QA")
 
     effs=[]
     for burst in bursts:
@@ -100,7 +101,7 @@ def writeOutputFiles(options, config, bursts):
         print "Burst size output requested."
         fh = open(options.burstsizeofile, "w")
         norm = sizesFromBursts(bursts)
-        corr = sizesFromBursts(bursts, corrected=True, QD=config.getfloat("Dye Constants", "QD"), QA=config.getfloat("Dye Constants", "QA"))
+        corr = sizesFromBursts(bursts, corrected=True, QD=config.get("Dye Constants", "QD"), QA=config.get("Dye Constants", "QA"))
         savetxt(fh, array((norm, corr)).T)
         fh.close()
         print "Burst size written to ", options.burstsizeofile
@@ -155,7 +156,7 @@ def readConfigAndAssignFRETRate(options, trajectories):
     print "Reading configuration file \"%s\"." % options.configfilename
     config = getFRETConfig(options.configfilename)
     calcKineticRatesFromConfig(config)
-    config.set("System", "verbose", "0")
+    config.set("System", "verbose", 0)
     if options.rseed:
         print "Setting up RNG seed to %d" % options.rseed
         random.seed(options.rseed)
@@ -171,7 +172,7 @@ def runMCFRET(options):
     print "================================ Input prepared ========================="
     print 
     print "Starting efficiency calculation"
-    ncpu = config.getint("System", "ncpu")
+    ncpu = config.get("System", "ncpu")
     if ncpu==-1:
         print "Determining number of available cpu's..."
         print "-> %d cpus detected" % multiprocessing.cpu_count()
@@ -181,7 +182,7 @@ def runMCFRET(options):
     if options.prffile:
         print "THIS IS A PROFILING RUN! - will write to logfile and run with only process", options.prffile
         import cProfile
-        cProfile.runctx('bursts = calculateBursts(trajectories,eprobabilities,config,%d,%d,1)'%(config.getint("Monte Carlo", "nbursts"),random.randint(0,sys.maxint)), globals(), locals(), options.prffile)
+        cProfile.runctx('bursts = calculateBursts(trajectories,eprobabilities,config,%d,%d)'%(config.get("Monte Carlo", "nbursts"),random.randint(0,sys.maxint)), globals(), locals(), options.prffile)
         print "Profiling runs write not output..."
         
     elif ncpu > 1:
@@ -189,24 +190,30 @@ def runMCFRET(options):
     
     else:
         print "Doing single process run."
-        bursts = calculateBursts(trajectories, eprobabilities, config,config.getint("Monte Carlo", "nbursts"),random.randint(0,sys.maxint),1)
+        config.set("System","verbose",1)
+        print "Will calculate efficiencies from",config.get("Monte Carlo", "nbursts"),"bursts."
+        print "Setting up burst generator."
+        bursts = calculateBursts(trajectories, eprobabilities, config,config.get("Monte Carlo", "nbursts"),random.randint(0,sys.maxint))
     
     if not options.prffile:
         writeOutputFiles(options, config, bursts)
 
 def runMultiprocessPhotonFlooding(trajectories,config):
-    ncpu = config.getint("System", "ncpu")
+    ncpu = config.get("System", "ncpu")
 
     print "Preparing %d clients for burst generation." % ncpu
     pool = multiprocessing.Pool(ncpu)
 
     results=[]    
     print "Setting up jobs for %d trajectories." % (len(trajectories))
+    config.set("System","verbose",0)
     for traj in trajectories:
-        verbose=0
         trajs={}
         trajs[traj]=trajectories[traj]
-        res= pool.apply_async(floodTrajsWithPhotons, (trajs, config,random.randint(0,sys.maxint),verbose))
+        config.makeReadonly()
+        config.options("Photon Flooding")
+        print config.get('Photon Flooding', 'photoncount')
+        res= pool.apply_async(floodTrajsWithPhotons, (trajs, config,random.randint(0,sys.maxint)))
         results.append(res)
               
     bursts=[]
@@ -224,19 +231,19 @@ def runTrajPhotonFlooding(trajectories,config):
     print "================================ Input prepared ========================="
     print 
     print "Starting trajectory processing"
-    ncpu = config.getint("System", "ncpu")
+    ncpu = config.get("System", "ncpu")
     if ncpu==-1:
         print "Determining number of available cpu's..."
         print "-> %d cpus detected" % multiprocessing.cpu_count()
         ncpu=multiprocessing.cpu_count()
-        config.set("System", "ncpu","%d"%ncpu)
+        config.set("System", "ncpu",ncpu)
            
     if ncpu > 1:
         runMultiprocessPhotonFlooding(trajectories,config)
     
     else:
         print "Doing single process run."
-        trajectories=floodTrajsWithPhotons(trajectories,config,random.randint(0,sys.maxint),1)    
+        trajectories=floodTrajsWithPhotons(trajectories,config,random.randint(0,sys.maxint))    
 
 def runTrajPrbAdd(options):
     trajectories, eprobabilities = readTrajAndClasses(options)

@@ -198,7 +198,7 @@ class testFullRun(unittest.TestCase):
         options.pbfile="aver.prb"
         options.configfilename="wrongminmaxstart2.conf"
         options.expbfile="expbursts.bst"
-        self.assertRaises(IndexError,runMCFRET,options)
+        self.assertRaises(ValueError,runMCFRET,options)
         
     def test_rejectPhotonTest(self):
         for i in ("trajectory","same-species","all"):
@@ -258,7 +258,9 @@ class testFullRun(unittest.TestCase):
             runMCFRET(options)
             self.assertAlmostEqual(numpy.loadtxt("effs.txt").mean(),0.5,delta=0.05)      
         except ImportError:
-            self.assertRaises(ImportError,runMCFRET,options)
+            pass
+#            from FRETUtils.PhotonGenerator import tryGetCythonPhoton
+#            self.assertRaises(ImportError,runMCFRET,options)
 
     def test_cextensionPhotongenerator(self):
         options = FakeOptions()
@@ -271,7 +273,9 @@ class testFullRun(unittest.TestCase):
             runMCFRET(options)
             self.assertAlmostEqual(numpy.loadtxt("effs.txt").mean(),0.5,delta=0.05)      
         except ImportError:
-            self.assertRaises(ImportError,runMCFRET,options)
+            pass
+#            from FRETUtils.PhotonGenerator import tryGetCPhoton
+#            self.assertRaises(ImportError,runMCFRET,options)
 
 class testFullRunMultiprocessing(unittest.TestCase):
     

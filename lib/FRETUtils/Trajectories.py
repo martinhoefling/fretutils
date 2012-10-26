@@ -17,12 +17,12 @@ def writeRKProbTraj(fh,trajs,probabilities,config):
     """writes time, distance, kappa and the total probability in an opened file handle"""
     if config:
         try:
-            startclip=config.getint("Photon Flooding","startclip")
+            startclip=config.get("Photon Flooding","startclip")
         except:
             startclip=0
         
         try:
-            endclip=config.getint("Photon Flooding","endclip")
+            endclip=config.get("Photon Flooding","endclip")
         except:
             endclip=0
     else:
@@ -83,11 +83,11 @@ def readTrajs(trajs,fformat):
 
 def calcFRETRates(trajs,config):
     """calculate fret rates of each trajectory according to given configuration"""
-    deltat=config.getfloat("Monte Carlo","deltat")
+    deltat=config.get("Monte Carlo","deltat")
     keys=trajs.keys()
     keys.sort()
-    R0=config.getfloat("FRET Constants","R0")/pow(config.getfloat("FRET Constants","kappa"),1./6)
-    kDtot=config.getfloat("Dye Constants","kD")+config.getfloat("Dye Constants","kDi")
+    R0=config.get("FRET Constants","R0")/pow(config.get("FRET Constants","kappa"),1./6)
+    kDtot=config.get("Dye Constants","kD")+config.get("Dye Constants","kDi")
     print "Converting R/Kappa^2 trajectories to donor decay probability trajectories..."
     print "Constants for the donor decay calculation:"
     print "-> R_0 reduced by (kappa^2)^1/6 is %6.2f"%R0
@@ -113,23 +113,13 @@ def getRandomTrajectory(trajs,species):
         if testkey >= random.random()*maxsamples:
             return trajs[testkey[0]]  
 
-def floodTrajsWithPhotons(trajs,config,randseed,verbose):
+def floodTrajsWithPhotons(trajs,config,randseed):
     random.seed(randseed)
     numpy.random.seed(random.randint(0,sys.maxint))
-    config.set("System","verbose","%d"%verbose)
-    try:
-        photcount=config.getint("Photon Flooding","photoncount")
-    except:
-        print "photoncount option in section [Photon Flooding] not found. Setting to default 10"
-        if not config.has_section("Photon Flooding"):
-            print "adding Photon Flooding section with default values"
-            config.add_section("Photon Flooding")
-        config.set("Photon Flooding","photoncount","10")
-        photcount=config.getint("Photon Flooding","photoncount")
-
+    photcount=config.get("Photon Flooding","photoncount")
             
-    deltat=config.getfloat("Monte Carlo","deltat")
-    verbose=config.getint("System","verbose")
+    deltat=config.get("Monte Carlo","deltat")
+    verbose=config.get("System","verbose")
     
  
     for key in trajs:
@@ -141,7 +131,7 @@ def floodTrajsWithPhotons(trajs,config,randseed,verbose):
             if verbose and ndx%10==0:
                 print "%d/%d\r"%(ndx,traj["length"]),
                 
-            for i in range(photcount):
+            for _ in range(photcount):
                 try:
                     photon = getPhoton(traj,config,ndx)
                     endndx = int(photon.endtime/deltat)
