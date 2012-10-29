@@ -16,15 +16,8 @@ import numpy
 def writeRKProbTraj(fh,trajs,probabilities,config):
     """writes time, distance, kappa and the total probability in an opened file handle"""
     if config:
-        try:
-            startclip=config.get("Photon Flooding","startclip")
-        except:
-            startclip=0
-        
-        try:
-            endclip=config.get("Photon Flooding","endclip")
-        except:
-            endclip=0
+        startclip=config.get("Photon Flooding","startclip")
+        endclip=config.get("Photon Flooding","endclip")
     else:
         startclip=0
         endclip=0     

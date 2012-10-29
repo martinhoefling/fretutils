@@ -15,7 +15,7 @@ def getCmdlineOptions():
     group1.add_option("-d", "--directory", dest="trajdirectory",
                       help="directory with R-Kappa trajectories", default=".",metavar="RKDIR")
     group1.add_option("-c", "--configfile",dest="configfilename", 
-                      help="configuration filename", default = "fret.conf",metavar="fret.conf")
+                      help="configuration filename, default file will be written if file does not exist", default = "fret.conf",metavar="fret.conf")
     group1.add_option("-p", "--probabilites",dest="pbfile", 
                       help="definition and probability of trajectory classes", default = "probabilities.dat",metavar="probabilities.dat")
     

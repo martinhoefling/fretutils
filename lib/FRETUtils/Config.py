@@ -5,7 +5,6 @@ Created on 26.10.2012
 '''
 
 from ConfigParser import ConfigParser
-import os
 
 class SecureConfigParser(object,ConfigParser):
     def __init__(self):
@@ -83,7 +82,6 @@ class FRETConfigParser(SecureConfigParser):
         self.setdefault("Burst Size Distribution", "ulimit", 80, int, lambda x: x>0,"must be positive" )
         self.setdefault("Burst Size Distribution", "lambda", -2.3, float, lambda x: x<0,"must be negative" )
         self.setdefault("Burst Size Distribution", "apply", "true-photon", str, lambda x: x in ["true-photon","corrected"] , "must be true-photon or corrected")
-        self.setdefault("Burst Size Distribution", "bsdfile", ".filename", str, lambda x: True, "not found")
         
         self.setdefault("Burst Accumulation", "method", "trajectory", str, lambda x: x in ["trajectory","same-species","all"] ,"must be one of trajectory, same-species or all" )
         
@@ -100,10 +98,33 @@ class FRETConfigParser(SecureConfigParser):
         self.setdefault("System", "verbose", 1, int , lambda x: x==0 or x==1 ,"must be 0 or 1" )
         self.setdefault("System", "blocksize", 100, int , lambda x: x>0 ,"must be larger than zero" )
 
-        
         self.setdefault('Photon Flooding','photoncount',10, int,lambda x: x>0,"must be positive"  )
         self.setdefault('Photon Flooding','startclip',0, int, lambda x: x>=0,"must be positive or zero"  )
         self.setdefault('Photon Flooding','endclip',0, int, lambda x: x>=0,"must be positive or zero"  )
         
-
+class ReconstructionConfigParser(SecureConfigParser):
+    def __init__(self):
+        SecureConfigParser.__init__(self)
+        self.setdefault("Transfer Matrix", "type", "global", str, lambda x:x in ("global","local","none"), "must be one of global local or none")
+        self.setdefault("Transfer Matrix", "R0", 5.4, float, lambda x: x>0,"must be positive" )
+        self.setdefault("Transfer Matrix", "distance bins", 80, int,lambda x: x>0,"must be positive" )
+        self.setdefault("Transfer Matrix", "efficiency bins", 50, int, lambda x: x>0,"must be positive" )
+        self.setdefault("Transfer Matrix", "bursts per bin", 800, int, lambda x: x>0,"must be positive" )
+        self.setdefault("Transfer Matrix", "from distance", -1, float, lambda x: x!=0 , "must be non-zero")
+        self.setdefault("Transfer Matrix", "to distance", -1, float, lambda x: x!=0 , "must be non-zero")
+        
+        self.setdefault("Burst Size Distribution", "method", "analytical", str, lambda x: x in ["analytical","file"], "must be analytical or file")
+        self.setdefault("Burst Size Distribution", "llimit", 20, int, lambda x: x>0,"must be positive" )
+        self.setdefault("Burst Size Distribution", "ulimit", 80, int, lambda x: x>0,"must be positive" )
+        self.setdefault("Burst Size Distribution", "lambda", -2.3, float, lambda x: x<0,"must be negative" )
+        
+        self.setdefault("Reverse Model Fit","maxruntime",100,int,lambda x: x>0, "must be positive")
+        self.setdefault("Reverse Model Fit","nr gaussian",2,int,lambda x: x>0, "must be positive")
+        self.setdefault("Reverse Model Fit","sigma min",0.1,float,lambda x: x>0, "must be positive")
+        self.setdefault("Reverse Model Fit","sigma max",4,float,lambda x: x>0 , "must be positive")
+        self.setdefault("Reverse Model Fit","x0 min",-1,float,lambda x: x!=0 , "must be non-zero")
+        self.setdefault("Reverse Model Fit","x0 max",-1,float,lambda x: x!=0 , "must be non-zero")
+        self.setdefault("Reverse Model Fit","prefact min",0.0,float,lambda x: x>=0, "must be positive or zero")
+        self.setdefault("Reverse Model Fit","prefact max",1.0,float,lambda x: x>0, "must be positive")
+     
         

@@ -49,7 +49,7 @@ def calculateBursts(traj,eprob,conf,nbursts,randseed):
     pyrand.seed(randseed)
     nprand.seed(pyrand.randint(0,sys.maxint))
     verbose = conf.get("System","verbose")
-    #chose burst size generation method
+
     if conf.get("Burst Size Distribution","method") == "analytical":
         if verbose:
             print "-> Generating burst sizes from analytical function (powerlaw)"
@@ -66,11 +66,7 @@ def calculateBursts(traj,eprob,conf,nbursts,randseed):
         else:
             bsizes=readBurstSizes(conf.get("Burst Size Distribution","bsdfile"),corrected=False)
         burstGenerator = lambda : pyrand.choice(bsizes)
-        
-    else:
-        raise ValueError("-> Unkown BSD generation method.")
-        
-    
+            
     if verbose:
         print "Calculating bursts sizes."
     burstsizelist=getBurstSizes(nbursts,burstGenerator)
@@ -111,9 +107,7 @@ def generateBurst(trajs,eprob,conf,burst):
     #select species and trajectory once
     elif conf.get("Burst Accumulation","method") == "trajectory":
         generateBurstFromSingleTraj(eprob,trajs,conf,burst)
-                
-    else:
-        raise ValueError("Invalid accumulation method.")    
+                 
 
 
 def setUpBurstGeneration(conf):
@@ -124,8 +118,7 @@ def setUpBurstGeneration(conf):
         applycorrectedcutoff = True
     elif conf.get("Burst Size Distribution", "apply") == "true-photon":
         applycorrectedcutoff = False
-    else:
-        raise ValueError("Invalid Burst cutoff application method: %s" % conf.get("Burst Size Distribution", "apply"))
+
     return QD, QA, globalreject, applycorrectedcutoff
 
 def generateBurstFromAllTraj(eprob,trajs,conf,burst):

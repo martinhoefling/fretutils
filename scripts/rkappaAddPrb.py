@@ -17,7 +17,7 @@ def getCmdlineOptions():
     
     group2 = OptionGroup(parser, "Optional input")
     group2.add_option("-c", "--configfile",dest="configfilename", 
-                      help="configuration filename", default = None,metavar="fret.conf")
+                      help="configuration filename, default file will be written if file does not exist", default = None,metavar="fret.conf")
     group2.add_option("-s", "--seed",dest="rseed", 
                       help="random number generator seed", default = None, type="int" ,metavar="python_default")
     group2.add_option("-r", "--trajformat",default="npz", dest="trajformat",

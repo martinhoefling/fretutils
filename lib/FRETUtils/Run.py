@@ -8,7 +8,7 @@ from FRETUtils.Efficiencies import calculateBursts,calcKineticRatesFromConfig
 from FRETUtils.Ensemble import readProbabilities,assignTrajProbabilityClasses,cleanProbabilities
 from FRETUtils.Photons import setPhotonGenerator
 from FRETUtils.Trajectories import createTrajectoryList,readTrajs,calcFRETRates,writeRKProbTraj,floodTrajsWithPhotons
-from FRETUtils.Config import FRETConfigParser as ConfigParser
+from FRETUtils.Config import FRETConfigParser,ReconstructionConfigParser
 
 import random
 import sys
@@ -19,10 +19,19 @@ from FRETUtils.Reconstruction import readEfficiencies, constructTM,\
     resolveDistances, writeDistances
 import os
 
-def getFRETConfig(conffile):
-    config = ConfigParser()
+def getSecureConfig(conffile,parser):
+    config = parser()
+    if not os.path.exists(conffile):
+        with open(conffile) as configfile:
+            config.write(configfile)
     config.readfp(open(conffile))
     return config
+
+def getFRETConfig(conffile):
+    return getSecureConfig(conffile,FRETConfigParser)
+
+def getReconstructionConfig(conffile):
+    return getSecureConfig(conffile,ReconstructionConfigParser)
 
 def doMultiprocessRun(options, config, trajectories, eprobabilities):
     ncpu = config.get("System", "ncpu")
@@ -167,7 +176,7 @@ def readConfigAndAssignFRETRate(options, trajectories):
 def runMCFRET(options):
     trajectories, eprobabilities = readTrajAndClasses(options)   
     config = readConfigAndAssignFRETRate(options, trajectories)
-    config.set("Burst Size Distribution", "bsdfile", options.expbfile)
+    config.sethidden("Burst Size Distribution", "bsdfile", options.expbfile,str)
     print 
     print "================================ Input prepared ========================="
     print 
@@ -211,8 +220,6 @@ def runMultiprocessPhotonFlooding(trajectories,config):
         trajs={}
         trajs[traj]=trajectories[traj]
         config.makeReadonly()
-        config.options("Photon Flooding")
-        print config.get('Photon Flooding', 'photoncount')
         res= pool.apply_async(floodTrajsWithPhotons, (trajs, config,random.randint(0,sys.maxint)))
         results.append(res)
               
@@ -268,17 +275,9 @@ def validateOptions(options):
     if not os.path.exists(options.efficiencyfile):
         print "Efficiency file %s does not exist."%options.efficiencyfile
         sys.exit(1)
-    if not options.transferMatrix:
-        print "No transfer matrix type (-t) specified."
-        sys.exit(1)
-    if not options.R0:
-        print "No Foerster Radius (--R0) specified."
-        sys.exit(1)
-    
-        
-    
 
 def runReconstruction(options):
+    config = getReconstructionConfig(options.configfilename)
     if options.rseed:
         print "Setting up RNG seed to %d" % options.rseed
         random.seed(options.rseed)

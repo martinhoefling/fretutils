@@ -57,6 +57,19 @@ def gaussSQDiff(argvec,TM,targeteff,xxarr):
  
     return devnew
 
+def penalizeCloseGauss(argvec,TM,targeteff,xxarr):
+    stddev = gaussSQDiff(argvec,TM,targeteff,xxarr)
+    nrgauss = len(argvec)/3
+    r_vals=argvec[nrgauss:2*nrgauss]
+    sig_vals=argvec[2*nrgauss:]
+    dists = numpy.subtract.outer(r_vals,r_vals.T)
+    ssums = numpy.add.outer(sig_vals,sig_vals.T)
+    absdist = numpy.sqrt(dists*dists)
+    distsigdiff = absdist-0.5*ssums
+    distsigdiffnotr = distsigdiff - distsigdiff * numpy.eye(distsigdiff.shape[0])
+    diff = (distsigdiffnotr < 0).sum()/2
+    return stddev * 10 ** diff
+
 def plotCallback(p,lines_dist,lines_eff,lines_g,xxarr,TM):
 #    print p.__dict__
     argvec = p.xk
@@ -116,7 +129,8 @@ def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime):
     xarr = numpy.linspace(minR+myrange/rvecbins/2,maxR-myrange/rvecbins/2,rvecbins)
     xxarr = numpy.array([xarr] * nrgauss)
 
-    minfuncwrap = lambda  x: gaussSQDiff(x,tmatrix.getMatrix(),pearr,xxarr)
+    #minfuncwrap = lambda  x: gaussSQDiff(x,tmatrix.getMatrix(),pearr,xxarr)
+    minfuncwrap = lambda  x: penalizeCloseGauss(x,tmatrix.getMatrix(),pearr,xxarr)
     
     lines_distance,lines_efficiency,g_lines = createLivePlot(nrgauss,pearr,tmatrix,xarr,lbounds,ubounds)
     
