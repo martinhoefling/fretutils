@@ -21,19 +21,24 @@ if mpl.rcParams["backend"]!=setBackend:
 
 mpl.rcdefaults()  
 
-def GaussianRegularizationDistanceReconstruction(options, TM, effhist):
+def GaussianRegularizationDistanceReconstruction(config, TM, effhist):
 
-    Rmin=options.distancestart
-    Rmax=options.distanceend
-    grmin=Rmin
-    grmax=Rmax
-    gsigmin=0.1
-    gsigmax=4.
-    gamin=0.2
-    gamax=1.
-    ngauss = 2
+    Rmin=config.get("Transfer Matrix", "from distance")
+    Rmax=config.get("Transfer Matrix", "to distance")
+    if config.get("Reverse Model Fit","x0 min")<0:
+        config.set("Reverse Model Fit","x0 min",Rmin)
+    if config.get("Reverse Model Fit","x0 max")<0:
+        config.set("Reverse Model Fit","x0 max",Rmax)
 
-    maxtime=100
+    grmin=config.get("Reverse Model Fit","x0 min")
+    grmax=config.get("Reverse Model Fit","x0 max")
+    gsigmin=config.get("Reverse Model Fit","sigma min")
+    gsigmax=config.get("Reverse Model Fit","sigma max")
+    gamin=config.get("Reverse Model Fit","prefact min")
+    gamax=config.get("Reverse Model Fit","prefact max")
+    ngauss = config.get("Reverse Model Fit","nr gaussian")
+    maxtime= config.get("Reverse Model Fit","maxruntime")
+    
     lbounds = [gamin] * ngauss + [grmin] * ngauss + [gsigmin] * ngauss
     ubounds = [gamax] * ngauss + [grmax] * ngauss + [gsigmax] * ngauss
     

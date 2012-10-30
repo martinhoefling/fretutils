@@ -22,7 +22,7 @@ import os
 def getSecureConfig(conffile,parser):
     config = parser()
     if not os.path.exists(conffile):
-        with open(conffile) as configfile:
+        with open(conffile,"w") as configfile:
             config.write(configfile)
     config.readfp(open(conffile))
     return config
@@ -277,11 +277,13 @@ def validateOptions(options):
         sys.exit(1)
 
 def runReconstruction(options):
-    config = getReconstructionConfig(options.configfilename)
+    config = getReconstructionConfig(options.configfile)
+    config.sethidden("Burst Size Distribution", "bsdfile", options.expbfile,str)
+
     if options.rseed:
         print "Setting up RNG seed to %d" % options.rseed
         random.seed(options.rseed)
-    effhist=readEfficiencies(options.efficiencyfile,options.efficiencybins)
-    TM = constructTM(options)
-    r_prdist,xrange,e_fitprdist,fitvals = resolveDistances(options,TM,effhist)
+    effhist=readEfficiencies(options.efficiencyfile,config.get("Transfer Matrix","efficiency bins"))
+    TM = constructTM(options,config)
+    r_prdist,xrange,e_fitprdist,fitvals = resolveDistances(config,TM,effhist)
     writeDistances(xrange,r_prdist,options)

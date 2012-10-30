@@ -36,61 +36,71 @@ def readRKPrbSamples(rkappafile):
     #discarding time information
     return arr[:,1],arr[:,2],arr[:,3]
 
-def constructGlobalTM(options,burstGenerator):
-    if not options.distancestart or not options.distanceend:
-        print "Distance start (--rs) and end (--re) not specified."
-        sys.exit(1)
-        
-    TM = GlobalAVGKappaTransferMatrix(options.distancebins,options.efficiencybins,options.burstCount,burstGenerator, options.R0, options.distancestart,options.distanceend)
+def constructGlobalTM(config,burstGenerator):
+    myrange = getRange(config)
+    if not myrange:
+        raise ValueError("Range must be specified in config file for TM type global.")
+    
+    dbins = config.get("Transfer Matrix","distance bins")
+    ebins = config.get("Transfer Matrix","efficiency bins")
+    bcount= config.get("Transfer Matrix","bursts per bin")
+    R0 = config.get("Transfer Matrix","R0")
+    TM = GlobalAVGKappaTransferMatrix(dbins,ebins,bcount,burstGenerator, R0, myrange)
     return TM
 
-def getRange(options):
-    if options.distancestart and options.distanceend:
-        myrange = float(options.distancestart), float(options.distanceend)
-    elif not options.distancestart and not options.distanceend:
+def getRange(config):
+    if config.get("Transfer Matrix", "from distance") > 0 and config.get("Transfer Matrix", "to distance") > 0:
+        myrange = (config.get("Transfer Matrix", "from distance"), config.get("Transfer Matrix", "to distance"))
+    elif config.get("Transfer Matrix", "from distance") < 0 and config.get("Transfer Matrix", "to distance"):
         myrange = None
     else:
-        raise ValueError("Specify distance range by using both, -rs and -re or none of both (autodetect from -r file).")
+        raise ValueError("Specify distance range by two positive values, or two negative for autodetect.")
     return myrange
 
-def constructNonGlobalTM(TMType,options,burstGenerator):
-    myrange = getRange(options)
+def constructNonGlobalTM(TMType,options,config,burstGenerator):
+    myrange = getRange(config)
 
     RSamples,KappaSamples,SampleWeights = readRKPrbSamples(options.rkappafile)
     
     if not myrange:
-        options.distancestart=RSamples.min()
-        options.distanceend=RSamples.max()
-        
-    TM = TMType(options.distancebins,options.efficiencybins,options.burstCount,burstGenerator, options.R0,RSamples,KappaSamples,SampleWeights,RRange=myrange)
+        config.set("Transfer Matrix","from distance",RSamples.min())
+        config.set("Transfer Matrix","to distance",RSamples.max())
+    
+    dbins = config.get("Transfer Matrix","distance bins")
+    ebins = config.get("Transfer Matrix","efficiency bins")
+    bcount= config.get("Transfer Matrix","bursts per bin")
+    R0 = config.get("Transfer Matrix","R0")    
+    TM = TMType(dbins,ebins,bcount,burstGenerator, R0,RSamples,KappaSamples,SampleWeights,RRange=myrange)
     return TM
 
-def constructLocalTM(options,burstGenerator):
-    return constructNonGlobalTM(DistanceAVGKappaTransferMatrix,options,burstGenerator)
+def constructLocalTM(options,config,burstGenerator):
+    return constructNonGlobalTM(DistanceAVGKappaTransferMatrix,options,config,burstGenerator)
     
 
-def constructNoAVGTM(options,burstGenerator):
-    return constructNonGlobalTM(DistanceKappaTransferMatrix,options,burstGenerator)
+def constructNoAVGTM(options,config,burstGenerator):
+    return constructNonGlobalTM(DistanceKappaTransferMatrix,options,config,burstGenerator)
 
-def getBurstGenerator(options):
-    if options.expbfile:
-        return getExpBurstgen(options.expbfile)
+def getBurstGenerator(config):
+    if config.get("Burst Size Distribution","method")=="analytical":
+        llimit=config.get("Burst Size Distribution","llimit")
+        ulimit=config.get("Burst Size Distribution","ulimit")
+        lmb=config.get("Burst Size Distribution","lambda")
+        return getFitBurstgen(llimit, ulimit,lmb)
     else:
-        return getFitBurstgen(options.burstMinsize, options.burstMaxsize, options.burstLambda)
+        return getExpBurstgen(config.get("Burst Size Distribution","bsdfile"))    
 
-def constructTM(options):
-    burstgen = getBurstGenerator(options)
-    if options.transferMatrix=="global":
-        return constructGlobalTM(options,burstgen)
-    elif options.transferMatrix=="local":
-        return constructLocalTM(options,burstgen)
-    elif options.transferMatrix=="none":
-        return constructNoAVGTM(options,burstgen)
-    else:
-        raise ValueError("Invalid transfer matrix type selected") 
+def constructTM(options,config):
+    burstgen = getBurstGenerator(config)
+    tm = config.get("Transfer Matrix","type")
+    if tm=="global":
+        return constructGlobalTM(config,burstgen)
+    elif tm=="local":
+        return constructLocalTM(options,config,burstgen)
+    elif tm=="none":
+        return constructNoAVGTM(options,config,burstgen)
 
-def resolveDistances(options, TM, effhist):
-    return GaussianRegularizationDistanceReconstruction(options, TM, effhist)
+def resolveDistances(config, TM, effhist):
+    return GaussianRegularizationDistanceReconstruction(config, TM, effhist)
 
 def writeDistances(xvrange,distances,options):
     arr=numpy.array((xvrange,distances))
