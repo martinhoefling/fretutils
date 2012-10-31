@@ -44,6 +44,8 @@ class SecureConfigParser(object,ConfigParser):
         super(SecureConfigParser,self).set(section,option.lower(),str(value))
     
     def get(self,section,option):
+        if not self.allowed.has_key((section,option.lower())):
+            raise ValueError("Invalid config option requested.")
         return self.allowed[(section,option.lower())][0](super(SecureConfigParser,self).get(section,option.lower()))
         
     def checkall(self):
@@ -126,5 +128,6 @@ class ReconstructionConfigParser(SecureConfigParser):
         self.setdefault("Reverse Model Fit","x0 max",-1,float,lambda x: x!=0 , "must be non-zero")
         self.setdefault("Reverse Model Fit","prefact min",0.0,float,lambda x: x>=0, "must be positive or zero")
         self.setdefault("Reverse Model Fit","prefact max",1.0,float,lambda x: x>0, "must be positive")
+        self.setdefault("Reverse Model Fit","penaltyfact",0.0,float,lambda x: x>=0, "must be zero or positive")
      
         

@@ -38,13 +38,13 @@ def GaussianRegularizationDistanceReconstruction(config, TM, effhist):
     gamax=config.get("Reverse Model Fit","prefact max")
     ngauss = config.get("Reverse Model Fit","nr gaussian")
     maxtime= config.get("Reverse Model Fit","maxruntime")
+    pfact = config.get("Reverse Model Fit","penaltyfact")
     
     lbounds = [gamin] * ngauss + [grmin] * ngauss + [gsigmin] * ngauss
     ubounds = [gamax] * ngauss + [grmax] * ngauss + [gsigmax] * ngauss
     
-    r_prdist,xrange,e_fitprdist,fitvals = fittingOpenopt(effhist,TM,Rmin,Rmax,lbounds,ubounds,maxtime)
+    r_prdist,xrange,e_fitprdist,fitvals = fittingOpenopt(effhist,TM,Rmin,Rmax,lbounds,ubounds,maxtime,pfact)
     return r_prdist,xrange,e_fitprdist,fitvals
-
 
 def gaussSQDiff(argvec,TM,targeteff,xxarr):
     nrgauss = len(argvec)/3
@@ -62,7 +62,7 @@ def gaussSQDiff(argvec,TM,targeteff,xxarr):
  
     return devnew
 
-def penalizeCloseGauss(argvec,TM,targeteff,xxarr):
+def penalizeCloseGauss(argvec,TM,targeteff,xxarr,penaltyfactor):
     stddev = gaussSQDiff(argvec,TM,targeteff,xxarr)
     nrgauss = len(argvec)/3
     r_vals=argvec[nrgauss:2*nrgauss]
@@ -70,12 +70,12 @@ def penalizeCloseGauss(argvec,TM,targeteff,xxarr):
     dists = numpy.subtract.outer(r_vals,r_vals.T)
     ssums = numpy.add.outer(sig_vals,sig_vals.T)
     absdist = numpy.sqrt(dists*dists)
-    distsigdiff = absdist-0.5*ssums
+    distsigdiff = absdist-penaltyfactor*ssums
     distsigdiffnotr = distsigdiff - distsigdiff * numpy.eye(distsigdiff.shape[0])
     diff = (distsigdiffnotr < 0).sum()/2
     return stddev * 10 ** diff
 
-def plotCallback(p,lines_dist,lines_eff,lines_g,xxarr,TM):
+def plotCallback(p,lines_dist,lines_eff,lines_g,xxarr,TM,chsql,chisqs,chisqax):
 #    print p.__dict__
     argvec = p.xk
     nrgauss = len(argvec)/3
@@ -94,6 +94,14 @@ def plotCallback(p,lines_dist,lines_eff,lines_g,xxarr,TM):
     
     lines_dist.set_ydata(r_prdist)
     lines_eff.set_ydata(e_prdist)
+    
+    chisqs.append(p.fk)
+    if len(chisqs)%10==0:
+        chisqs.pop(0)
+        chisqs.append(p.fk)
+    chsql.set_data(range(len(chisqs)),chisqs)
+    chisqax.relim()
+    chisqax.autoscale_view(True,True,True)
     
     plt.draw()
     
@@ -124,26 +132,36 @@ def createLivePlot(nrgauss,pearr,tmatrix,xarr,lbounds,ubounds):
     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
     plt.subplot(223)
     tmatrix.plot()
+    plt.subplot(224)
+    chisqs=[]
+    chsql,=plt.plot(chisqs)
+    chisqax=plt.gca()
+    
     plt.show()
-    return lines_distance,lines_efficiency,g_lines
+    return lines_distance,lines_efficiency,g_lines,chsql,chisqs,chisqax
 
-def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime):    
+def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime,pfact):    
     nrgauss = len(lbounds) / 3      
     rvecbins=tmatrix.getMatrix().shape[0]
     myrange=maxR-minR
     xarr = numpy.linspace(minR+myrange/rvecbins/2,maxR-myrange/rvecbins/2,rvecbins)
     xxarr = numpy.array([xarr] * nrgauss)
 
-    #minfuncwrap = lambda  x: gaussSQDiff(x,tmatrix.getMatrix(),pearr,xxarr)
-    minfuncwrap = lambda  x: penalizeCloseGauss(x,tmatrix.getMatrix(),pearr,xxarr)
+    if pfact == 0:
+        print "Will not apply a penalty for gaussian proximity."
+        minfuncwrap = lambda  x: gaussSQDiff(x,tmatrix.getMatrix(),pearr,xxarr)
+    else:
+        print "Will penalize gaussians which are closer than %d times the sum of both sigmas."
+        minfuncwrap = lambda  x: penalizeCloseGauss(x,tmatrix.getMatrix(),pearr,xxarr,pfact)
     
-    lines_distance,lines_efficiency,g_lines = createLivePlot(nrgauss,pearr,tmatrix,xarr,lbounds,ubounds)
+    lines_distance,lines_efficiency,g_lines,chsql,chisqs,chisqax = createLivePlot(nrgauss,pearr,tmatrix,xarr,lbounds,ubounds)
     
-    mycallback =  lambda p: plotCallback(p,lines_distance,lines_efficiency,g_lines,xxarr,tmatrix)
+    mycallback =  lambda p: plotCallback(p,lines_distance,lines_efficiency,g_lines,xxarr,tmatrix,chsql,chisqs,chisqax)
 
     print "Starting openopt ##########################"
     prob = GLP(minfuncwrap,lb=lbounds,ub=ubounds,callback=mycallback,maxFunEvals=1e15,maxNonSuccess=200,maxIter=1e5,maxTime=gmaxtime)
     result=prob.solve('de',population=1000*len(lbounds))
+    
     #result=prob.solve('asa')
     #result=prob.solve('galileo') # not good
     #result=prob.solve('pswarm')
