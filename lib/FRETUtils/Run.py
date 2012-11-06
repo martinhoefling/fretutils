@@ -249,6 +249,7 @@ def runTrajPhotonFlooding(trajectories,config):
         runMultiprocessPhotonFlooding(trajectories,config)
     
     else:
+        config.set("System","verbose",1)
         print "Doing single process run."
         trajectories=floodTrajsWithPhotons(trajectories,config,random.randint(0,sys.maxint))    
 

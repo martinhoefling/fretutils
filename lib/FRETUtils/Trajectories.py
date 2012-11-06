@@ -28,8 +28,8 @@ def writeRKProbTraj(fh,trajs,probabilities,config):
         fh.write("# starting traj %s\n"%key)
         
         classprob = getTrajClassProbability(trajs[key],probabilities)
-        nrtrajs = getClassTrajCount
-        trajlen=trajs[key]["length"]
+        nrtrajs = getClassTrajCount(trajs[key]["species"],trajs)
+        trajlen=trajs[key]["length"]-startclip-endclip
         probprefact=classprob/nrtrajs/trajlen
 
         if not trajs[key].has_key("photons"):
@@ -46,7 +46,7 @@ def writeRKProbTraj(fh,trajs,probabilities,config):
 def createTrajectoryList(rootdir,fformat):
     """creates a dictionary of all npz files in a given directory"""
     trajs={}
-    for root,dirs,files in os.walk(rootdir,followlinks=True):
+    for root,_dirs,files in os.walk(rootdir,followlinks=True):
         for filen in files:
             if filen.endswith(".%s"%fformat):
                 trajs[pathjoin(root,filen)]=""
@@ -134,9 +134,10 @@ def floodTrajsWithPhotons(trajs,config,randseed):
                 try:
                     photon = getPhoton(traj,config,ndx)
                     endndx = int(photon.endtime/deltat)
+                    if endndx!=traj["length"]:
+                        traj["photons"][endndx]+=1
                 except ValueError:
                     pass
-                if endndx!=traj["length"]:
-                    traj["photons"][endndx]+=1
+
                     
     return trajs
