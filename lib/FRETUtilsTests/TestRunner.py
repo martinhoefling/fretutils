@@ -6,12 +6,12 @@ Created on 04.10.2012
 
 import unittest,os
 
-from FRETUtilsTests.EfficiencyTests import testEfficiencyFunctions
-from FRETUtilsTests.EnsembleTests import testEnsembleFunctions
-from FRETUtilsTests.HelperTests import testHelperFunctions
-from FRETUtilsTests.PhotonsTests import testPhotonFunctions
-from FRETUtilsTests.ConfigTests import testSecureConfigParser
-from FRETUtilsTests.RunTests import testFullRun, testFullRunMultiprocessing, testFullRKPrbConversion, testFullRKPrbConversionMultiprocessing
+from FRETUtilsTests.EfficiencyTests import testEfficiencyFunctions #@UnusedImport
+from FRETUtilsTests.EnsembleTests import testEnsembleFunctions #@UnusedImport
+from FRETUtilsTests.HelperTests import testHelperFunctions #@UnusedImport
+from FRETUtilsTests.PhotonsTests import testPhotonFunctions #@UnusedImport
+from FRETUtilsTests.ConfigTests import testSecureConfigParser #@UnusedImport
+from FRETUtilsTests.RunTests import testFullRun, testFullRunMultiprocessing, testFullRKPrbConversion, testFullRKPrbConversionMultiprocessing #@UnusedImport
 
 def runAllTests(directory="."):
     print os.path.abspath(os.curdir)

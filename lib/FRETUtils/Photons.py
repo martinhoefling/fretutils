@@ -87,8 +87,6 @@ def tryPlainGetPhoton(p0,pvar,start,seed):
         
     return -1,len(pvar)
 
-#@UnresolvedImport
-#@UnusedVariable
 def setPhotonGenerator(config):
     """sets the photon generation routine (python or c-extension)"""
     global _tryGetPhoton
@@ -99,10 +97,10 @@ def setPhotonGenerator(config):
     elif config.get("System", "photongenerator")=="cextension":
         print "-> Using c-extension photon generator"
 
-        from FRETUtils.fretnumpyext import tryGetCPhoton as _tryGetPhoton
+        from FRETUtils.fretnumpyext import tryGetCPhoton as _tryGetPhoton #@UnresolvedImport @UnusedImport
     elif config.get("System", "photongenerator")=="cython":
         print "-> Using cython photon generator"
-        from FRETUtils.PhotonGenerator import tryGetCythonPhoton as _tryGetPhoton        
+        from FRETUtils.PhotonGenerator import tryGetCythonPhoton as _tryGetPhoton #@UnresolvedImport @Reimport @UnusedImport
     else:
         raise ValueError("Invalid photon generator %s"%config.get("System", "photongenerator"))
 

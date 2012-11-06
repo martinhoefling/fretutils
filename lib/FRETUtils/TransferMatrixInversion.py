@@ -7,7 +7,7 @@ Created on 15.10.2012
 '''
 
 import numpy
-from openopt import GLP,NLP
+from openopt import GLP#,NLP
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -43,8 +43,8 @@ def GaussianRegularizationDistanceReconstruction(config, TM, effhist):
     lbounds = [gamin] * ngauss + [grmin] * ngauss + [gsigmin] * ngauss
     ubounds = [gamax] * ngauss + [grmax] * ngauss + [gsigmax] * ngauss
     
-    r_prdist,xrange,e_fitprdist,fitvals = fittingOpenopt(effhist,TM,Rmin,Rmax,lbounds,ubounds,maxtime,pfact)
-    return r_prdist,xrange,e_fitprdist,fitvals
+    r_prdist,x_range,e_fitprdist,fitvals = fittingOpenopt(effhist,TM,Rmin,Rmax,lbounds,ubounds,maxtime,pfact)
+    return r_prdist,x_range,e_fitprdist,fitvals
 
 def gaussSQDiff(argvec,TM,targeteff,xxarr):
     nrgauss = len(argvec)/3

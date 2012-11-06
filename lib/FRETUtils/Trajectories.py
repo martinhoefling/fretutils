@@ -6,7 +6,7 @@ Created on 24.06.2010
 
 from numpy import load as npload
 from numpy import zeros
-from FRETUtils.Ensemble import getTrajClassProbability
+from FRETUtils.Ensemble import getTrajClassProbability,getClassTrajCount
 from FRETUtils.Photons import getPhoton
 from os.path import join as pathjoin
 import os,sys
@@ -26,16 +26,22 @@ def writeRKProbTraj(fh,trajs,probabilities,config):
     keys.sort()
     for key in keys:
         fh.write("# starting traj %s\n"%key)
+        
+        classprob = getTrajClassProbability(trajs[key],probabilities)
+        nrtrajs = getClassTrajCount
+        trajlen=trajs[key]["length"]
+        probprefact=classprob/nrtrajs/trajlen
+
         if not trajs[key].has_key("photons"):
             trajs[key]["photons"]=numpy.ones(len(trajs[key]["t"]))
-        trajs[key]["photons"]=trajs[key]["photons"]*getTrajClassProbability(trajs[key],probabilities)
+        trajs[key]["photons"]=trajs[key]["photons"]* probprefact
         arr=numpy.array((trajs[key]["t"],trajs[key]["R"],trajs[key]["k2"],trajs[key]["photons"]))
         if endclip==0:
             numpy.savetxt(fh,arr.T[startclip:,:])
         else:
             numpy.savetxt(fh,arr.T[startclip:-endclip,:])
             
-        print key,"written with traj %s probability with length %d, clipping %d and %d frames at beginning and end."%(getTrajClassProbability(trajs[key],probabilities),trajs[key]["length"],startclip,endclip)
+        print key,"written with traj %s probability with length %d, clipping %d and %d frames at beginning and end."%(probprefact,trajs[key]["length"],startclip,endclip)
 
 def createTrajectoryList(rootdir,fformat):
     """creates a dictionary of all npz files in a given directory"""

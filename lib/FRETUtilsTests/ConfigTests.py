@@ -6,7 +6,7 @@ Created on 29.10.2012
 
 import unittest,tempfile
 
-from FRETUtils import Config
+from FRETUtils import Config #@UnresolvedImport
 
 class testSecureConfigParser(unittest.TestCase):
     def testAddWithoutDefault(self):

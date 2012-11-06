@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+
 from FRETUtils.Run import runTrajPrbAdd
 from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
 import sys,os
