@@ -34,8 +34,8 @@ def GaussianRegularizationDistanceReconstruction(config, TM, effhist):
     grmax=config.get("Reverse Model Fit","x0 max")
     gsigmin=config.get("Reverse Model Fit","sigma min")
     gsigmax=config.get("Reverse Model Fit","sigma max")
-    gamin=config.get("Reverse Model Fit","prefact min")
-    gamax=config.get("Reverse Model Fit","prefact max")
+    gamin=0.
+    gamax=1.
     ngauss = config.get("Reverse Model Fit","nr gaussian")
     maxtime= config.get("Reverse Model Fit","maxruntime")
     pfact = config.get("Reverse Model Fit","penaltyfact")
