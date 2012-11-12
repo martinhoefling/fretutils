@@ -51,7 +51,6 @@ class SecureConfigParser(object,ConfigParser):
     def checkall(self):
         for section in self.sections():
             for option in self.options(section):
-                print section,option
                 self.check(section,option.lower(),self.get(section, option.lower()))
                 
     def read(self,fname):

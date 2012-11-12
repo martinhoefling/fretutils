@@ -76,7 +76,6 @@ def penalizeCloseGauss(argvec,TM,targeteff,xxarr,penaltyfactor):
     return stddev * 10 ** diff
 
 def plotCallback(p,lines_dist,lines_eff,lines_g,xxarr,TM,chsql,chisqs,chisqax):
-#    print p.__dict__
     argvec = p.xk
     nrgauss = len(argvec)/3
     a_vals=argvec[0:nrgauss]
@@ -85,12 +84,11 @@ def plotCallback(p,lines_dist,lines_eff,lines_g,xxarr,TM,chsql,chisqs,chisqax):
          
     gaussians = (a_vals*numpy.exp(-(xxarr.T-r_vals)**2/(2.0*sig_vals**2)))
     r_prdist = gaussians.sum(axis=1)
-#    r_prdist /= r_prdist.max()
     e_prdist=numpy.dot(r_prdist,TM.getMatrix())  
     e_prdist=e_prdist/e_prdist.mean()    
     
     for gauss in range(nrgauss):
-        lines_g[gauss].set_ydata(gaussians[:,gauss])#/r_prdist.max()      
+        lines_g[gauss].set_ydata(gaussians[:,gauss])
     
     lines_dist.set_ydata(r_prdist)
     lines_eff.set_ydata(e_prdist)
@@ -158,8 +156,12 @@ def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime,pfact):
     
     mycallback =  lambda p: plotCallback(p,lines_distance,lines_efficiency,g_lines,xxarr,tmatrix,chsql,chisqs,chisqax)
 
+    constraints = []
+    sscale = lambda x: x[0:len(x)/3].sum()
+    constraints.append(sscale == 1.)
+
     print "Starting openopt ##########################"
-    prob = GLP(minfuncwrap,lb=lbounds,ub=ubounds,callback=mycallback,maxFunEvals=1e15,maxNonSuccess=200,maxIter=1e5,maxTime=gmaxtime)
+    prob = GLP(minfuncwrap,constraints=constraints,lb=lbounds,ub=ubounds,callback=mycallback,maxFunEvals=1e15,maxNonSuccess=200,maxIter=1e5,maxTime=gmaxtime)
     result=prob.solve('de',population=1000*len(lbounds))
     
     #result=prob.solve('asa')
@@ -187,6 +189,10 @@ def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime,pfact):
     a_final=xopt[0:nrgauss]
     r_final=xopt[nrgauss:2*nrgauss]
     sig_final=xopt[2*nrgauss:]
+
+    print "Gaussian Prefactors:",a_final
+    print "Gaussian Positions:",r_final
+    print "Gaussain width sigma:",sig_final
 
     gaussians = (a_final*numpy.exp(-(xxarr.T-r_final)**2/(2.0*sig_final**2)))
     r_prdist = gaussians.sum(axis=1)  

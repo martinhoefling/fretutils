@@ -7,7 +7,6 @@ from FRETUtils.Bursts import readBurstSizes, genPowerlawTable,\
     getAcceptRejectBurst
 import random
 import numpy
-import sys
 
 from TransferMatrices import GlobalAVGKappaTransferMatrix, DistanceAVGKappaTransferMatrix, DistanceKappaTransferMatrix
 from TransferMatrixInversion import GaussianRegularizationDistanceReconstruction
@@ -32,14 +31,24 @@ def readEfficiencies(efficiencyfile, efficiencybins):
     return effhist
 
 def readRKPrbSamples(rkappafile):
+    print "Reading rkappa file %s."%rkappafile
     arr = numpy.loadtxt(rkappafile,comments="#")
+    print "Done!"
     #discarding time information
     return arr[:,1],arr[:,2],arr[:,3]
 
-def constructGlobalTM(config,burstGenerator):
+def constructGlobalTM(options,config,burstGenerator):
     myrange = getRange(config)
+    if options.rkappafile:
+        RSamples,KappaSamples,SampleWeights = readRKPrbSamples(options.rkappafile)    
+        if not myrange:
+            config.set("Transfer Matrix","from distance",RSamples.min())
+            config.set("Transfer Matrix","to distance",RSamples.max())
+            myrange = getRange(config)
+
+
     if not myrange:
-        raise ValueError("Range must be specified in config file for TM type global.")
+        raise ValueError("Range must be specified in config file for TM type global. Alternatively read min and max values from rkappaprb file.")
     
     dbins = config.get("Transfer Matrix","distance bins")
     ebins = config.get("Transfer Matrix","efficiency bins")
@@ -93,7 +102,7 @@ def constructTM(options,config):
     burstgen = getBurstGenerator(config)
     tm = config.get("Transfer Matrix","type")
     if tm=="global":
-        return constructGlobalTM(config,burstgen)
+        return constructGlobalTM(options,config,burstgen)
     elif tm=="local":
         return constructLocalTM(options,config,burstgen)
     elif tm=="none":

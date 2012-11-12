@@ -22,7 +22,7 @@ def getCmdlineOptions():
     group2.add_option("-k", "--expbursts",dest="expbfile", 
                       help="experimental bursts size distribution file", default = None,metavar="exp.dat")    
     group2.add_option("-r", "--rkappa", dest="rkappafile",
-                      help="file with r kappa (and probabilities)", default="rkappaprb.txt")    
+                      help="file with r kappa (and probabilities)", default=None, metavar='rkappaprb.dat')    
 
     
     group2.add_option("-s", "--seed",dest="rseed", 
