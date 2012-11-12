@@ -40,17 +40,25 @@ def GaussianRegularizationDistanceReconstruction(config, TM, effhist):
     maxtime= config.get("Reverse Model Fit","maxruntime")
     pfact = config.get("Reverse Model Fit","penaltyfact")
     
-    lbounds = [gamin] * ngauss + [grmin] * ngauss + [gsigmin] * ngauss
-    ubounds = [gamax] * ngauss + [grmax] * ngauss + [gsigmax] * ngauss
+    lbounds = [gamin] * (ngauss-1) + [grmin] * ngauss + [gsigmin] * ngauss
+    ubounds = [gamax] * (ngauss-1) + [grmax] * ngauss + [gsigmax] * ngauss
     
     r_prdist,x_range,e_fitprdist,fitvals = fittingOpenopt(effhist,TM,Rmin,Rmax,lbounds,ubounds,maxtime,pfact)
     return r_prdist,x_range,e_fitprdist,fitvals
 
+    
+
+
+def x2parms(argvec):
+    nrgauss = (len(argvec)+1) / 3
+    a_vals = argvec[0:nrgauss-1]
+    a_vals = numpy.append(a_vals,1.-a_vals.sum())
+    r_vals = argvec[nrgauss-1:(2 * nrgauss)-1]
+    sig_vals = argvec[(2 * nrgauss)-1:]
+    return nrgauss,a_vals, r_vals, sig_vals
+
 def gaussSQDiff(argvec,TM,targeteff,xxarr):
-    nrgauss = len(argvec)/3
-    a_vals=argvec[0:nrgauss]
-    r_vals=argvec[nrgauss:2*nrgauss]
-    sig_vals=argvec[2*nrgauss:]
+    _nrgauss,a_vals, r_vals, sig_vals = x2parms(argvec)
     
     gaussians = (a_vals*numpy.exp(-(xxarr.T-r_vals)**2/(2.0*sig_vals**2)))
     r_prdist = gaussians.sum(axis=1)  
@@ -64,9 +72,7 @@ def gaussSQDiff(argvec,TM,targeteff,xxarr):
 
 def penalizeCloseGauss(argvec,TM,targeteff,xxarr,penaltyfactor):
     stddev = gaussSQDiff(argvec,TM,targeteff,xxarr)
-    nrgauss = len(argvec)/3
-    r_vals=argvec[nrgauss:2*nrgauss]
-    sig_vals=argvec[2*nrgauss:]
+    _nrgauss,_a_vals, r_vals, sig_vals = x2parms(argvec)
     dists = numpy.subtract.outer(r_vals,r_vals.T)
     ssums = numpy.add.outer(sig_vals,sig_vals.T)
     absdist = numpy.sqrt(dists*dists)
@@ -77,10 +83,7 @@ def penalizeCloseGauss(argvec,TM,targeteff,xxarr,penaltyfactor):
 
 def plotCallback(p,lines_dist,lines_eff,lines_g,xxarr,TM,chsql,chisqs,chisqax):
     argvec = p.xk
-    nrgauss = len(argvec)/3
-    a_vals=argvec[0:nrgauss]
-    r_vals=argvec[nrgauss:2*nrgauss]
-    sig_vals=argvec[2*nrgauss:] 
+    nrgauss,a_vals, r_vals, sig_vals = x2parms(argvec)
          
     gaussians = (a_vals*numpy.exp(-(xxarr.T-r_vals)**2/(2.0*sig_vals**2)))
     r_prdist = gaussians.sum(axis=1)
@@ -139,7 +142,7 @@ def createLivePlot(nrgauss,pearr,tmatrix,xarr,lbounds,ubounds):
     return lines_distance,lines_efficiency,g_lines,chsql,chisqs,chisqax
 
 def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime,pfact):    
-    nrgauss = len(lbounds) / 3      
+    nrgauss = (len(lbounds)+1) / 3      
     rvecbins=tmatrix.getMatrix().shape[0]
     myrange=maxR-minR
     xarr = numpy.linspace(minR+myrange/rvecbins/2,maxR-myrange/rvecbins/2,rvecbins)
@@ -156,12 +159,8 @@ def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime,pfact):
     
     mycallback =  lambda p: plotCallback(p,lines_distance,lines_efficiency,g_lines,xxarr,tmatrix,chsql,chisqs,chisqax)
 
-    constraints = []
-    sscale = lambda x: x[0:len(x)/3].sum()
-    constraints.append(sscale == 1.)
-
     print "Starting openopt ##########################"
-    prob = GLP(minfuncwrap,constraints=constraints,lb=lbounds,ub=ubounds,callback=mycallback,maxFunEvals=1e15,maxNonSuccess=200,maxIter=1e5,maxTime=gmaxtime)
+    prob = GLP(minfuncwrap,lb=lbounds,ub=ubounds,callback=mycallback,maxFunEvals=1e15,maxNonSuccess=200,maxIter=1e5,maxTime=gmaxtime)
     result=prob.solve('de',population=1000*len(lbounds))
     
     #result=prob.solve('asa')
@@ -186,9 +185,7 @@ def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime,pfact):
     xopt=result.xf
     print "Minimum function chisq",result.ff 
             
-    a_final=xopt[0:nrgauss]
-    r_final=xopt[nrgauss:2*nrgauss]
-    sig_final=xopt[2*nrgauss:]
+    nrgauss,a_final, r_final, sig_final = x2parms(xopt)
 
     print "Gaussian Prefactors:",a_final
     print "Gaussian Positions:",r_final
