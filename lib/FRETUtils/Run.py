@@ -8,15 +8,17 @@ from FRETUtils.Efficiencies import calculateBursts,calcKineticRatesFromConfig
 from FRETUtils.Ensemble import readProbabilities,assignTrajProbabilityClasses,cleanProbabilities
 from FRETUtils.Photons import setPhotonGenerator
 from FRETUtils.Trajectories import createTrajectoryList,readTrajs,calcFRETRates,writeRKProbTraj,floodTrajsWithPhotons
-from FRETUtils.Config import FRETConfigParser,ReconstructionConfigParser
+from FRETUtils.Config import FRETConfigParser,ReconstructionConfigParser,BurstDistAVGConfigParser
+from FRETUtils.Reconstruction import readEfficiencies, constructTM,\
+    resolveDistances, writeDistances
+from FRETUtils.Distances import getDistanceBursts
+
 
 import random
 import sys
 import cPickle
 import multiprocessing
 from numpy import array,savetxt
-from FRETUtils.Reconstruction import readEfficiencies, constructTM,\
-    resolveDistances, writeDistances
 import os
 
 def getSecureConfig(conffile,parser):
@@ -32,6 +34,9 @@ def getFRETConfig(conffile):
 
 def getReconstructionConfig(conffile):
     return getSecureConfig(conffile,ReconstructionConfigParser)
+
+def getDistAVGConfig(conffile):
+    return getSecureConfig(conffile,BurstDistAVGConfigParser)
 
 def doMultiprocessRun(options, config, trajectories, eprobabilities):
     ncpu = config.get("System", "ncpu")
@@ -288,3 +293,19 @@ def runReconstruction(options):
     TM = constructTM(options,config)
     r_prdist,xrange,e_fitprdist,fitvals = resolveDistances(config,TM,effhist)
     writeDistances(xrange,r_prdist,options)
+
+def runBurstDistAVGs(options):
+    if options.rseed:
+        print "Setting up RNG seed to %d" % options.rseed
+        random.seed(options.rseed)
+    trajectories, eprobabilities = readTrajAndClasses(options)   
+    config.sethidden("Burst Size Distribution", "bsdfile", options.expbfile,str)
+    config = getDistAVGConfig(options.configfilename)
+    distbursts = getDistanceBursts(trajectories,eprobabilities,config)
+    if options.distoutfile:
+        print "Burst efficiency output requested."
+        fh = open(options.distoutfile, "w")
+        savetxt(fh, distbursts)
+        fh.close()
+    
+    

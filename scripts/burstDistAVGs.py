@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-from FRETUtils.Run import runTrajPrbAdd
+from FRETUtils.Run import runBurstDistAVGs
 from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
 import sys,os
 
@@ -21,14 +21,16 @@ def getCmdlineOptions():
     group2 = OptionGroup(parser, "Optional input")
     group2.add_option("-c", "--configfile",dest="configfilename", 
                       help="configuration filename, default file will be written if file does not exist", default = None,metavar="fret.conf")
+    group2.add_option("-k", "--expbursts",dest="expbfile", 
+                      help="experimental bursts size distribution file", default = None,metavar="exp.dat")    
     group2.add_option("-s", "--seed",dest="rseed", 
                       help="random number generator seed", default = None, type="int" ,metavar="python_default")
     group2.add_option("-r", "--trajformat",default="npz", dest="trajformat",
                       help="trajectory format: npz (numpy), dat (plaintext)")
 
     group3 = OptionGroup(parser, "Output options")
-    group3.add_option("-o", "--output-file",dest="outtrajfile", 
-                      help="trajectory output directory", default = "trajout",metavar="trajout")
+    group3.add_option("-o", "--distanceburst-out",dest="distoutfile", 
+                      help="distance burst output file", default = "distout.txt",metavar="distout.txt")
    
     parser.add_option_group(group1)
     parser.add_option_group(group2)
@@ -38,7 +40,7 @@ def getCmdlineOptions():
 
 def main():
     (options, args) = getCmdlineOptions() 
-    runTrajPrbAdd(options)
+    runBurstDistAVGs(options)
     print """
 # %s - %s
 # (C) 2012 Martin Hoefling and Helmut Grubmueller

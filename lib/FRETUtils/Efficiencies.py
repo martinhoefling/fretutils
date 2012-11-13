@@ -44,28 +44,32 @@ def efficiencyDeltaFix(efficiencies,delta=0.00001):
     """returns an efficiency array with small offset delta in both direction, preventing problems at bin borders"""
     return efficiencies+nprand.rand(len(efficiencies))*2*delta-delta
     
+
+def getBurstSizeGenerator(conf, verbose):
+    if conf.get("Burst Size Distribution", "method") == "analytical":
+        if verbose:
+            print "-> Generating burst sizes from analytical function (powerlaw)"
+        mina = conf.get("Burst Size Distribution", "llimit")
+        maxa = conf.get("Burst Size Distribution", "ulimit")
+        bstable = genPowerlawTable(mina, maxa, conf.get("Burst Size Distribution", "lambda"))
+        burstGenerator = lambda:getAcceptRejectBurst(bstable, mina, maxa)
+    elif conf.get("Burst Size Distribution", "method") == "file":
+        if verbose:
+            print "-> Using burst sizes from file", conf.get("Burst Size Distribution", "bsdfile")
+        if conf.get("Burst Size Distribution", "apply") == "corrected":
+            bsizes = readBurstSizes(conf.get("Burst Size Distribution", "bsdfile"))
+        else:
+            bsizes = readBurstSizes(conf.get("Burst Size Distribution", "bsdfile"), corrected=False)
+        burstGenerator = lambda:pyrand.choice(bsizes)
+    return burstGenerator
+
 def calculateBursts(traj,eprob,conf,nbursts,randseed):
     """calculates efficiencies from trajectories with given probabilities and given configuration, here the burst sizes are determined"""  
     pyrand.seed(randseed)
     nprand.seed(pyrand.randint(0,sys.maxint))
     verbose = conf.get("System","verbose")
 
-    if conf.get("Burst Size Distribution","method") == "analytical":
-        if verbose:
-            print "-> Generating burst sizes from analytical function (powerlaw)"
-        mina=conf.get("Burst Size Distribution","llimit")
-        maxa=conf.get("Burst Size Distribution","ulimit")              
-        bstable=genPowerlawTable(mina,maxa,conf.get("Burst Size Distribution","lambda"))
-        burstGenerator = lambda : getAcceptRejectBurst(bstable,mina,maxa)
-        
-    elif conf.get("Burst Size Distribution","method") == "file":
-        if verbose:
-            print "-> Using burst sizes from file",conf.get("Burst Size Distribution","bsdfile")
-        if conf.get("Burst Size Distribution","apply")=="corrected":
-            bsizes=readBurstSizes(conf.get("Burst Size Distribution","bsdfile"))
-        else:
-            bsizes=readBurstSizes(conf.get("Burst Size Distribution","bsdfile"),corrected=False)
-        burstGenerator = lambda : pyrand.choice(bsizes)
+    burstGenerator = getBurstSizeGenerator(conf, verbose)
             
     if verbose:
         print "Calculating bursts sizes."
@@ -92,21 +96,21 @@ def getBursts(traj,eprob,conf,burstsizelist):
         
     return bursts
 
-def generateBurst(trajs,eprob,conf,burst):
-    """calculates efficiency according to a single given burst length using trajectories, configuration and probabilities and given method."""
+def generateBurst(trajs,eprob,conf,burstsize):
+    """calculates efficiency according to a single given burstsize length using trajectories, configuration and probabilities and given method."""
     #select method
     
-    #use all trajectories per burst
+    #use all trajectories per burstsize
     if conf.get("Burst Accumulation","method") == "all":
-        generateBurstFromAllTraj(eprob,trajs,conf,burst)
+        generateBurstFromAllTraj(eprob,trajs,conf,burstsize)
                     
     #select species once but allow all trajectories
     elif conf.get("Burst Accumulation","method") == "same-species":
-        generateBurstFromSameClassTraj(eprob,trajs,conf,burst)
+        generateBurstFromSameClassTraj(eprob,trajs,conf,burstsize)
                                
     #select species and trajectory once
     elif conf.get("Burst Accumulation","method") == "trajectory":
-        generateBurstFromSingleTraj(eprob,trajs,conf,burst)
+        generateBurstFromSingleTraj(eprob,trajs,conf,burstsize)
                  
 
 

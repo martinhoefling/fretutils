@@ -43,7 +43,7 @@ def main():
     runReconstruction(options)
     print """
 # %s - %s
-# (C) 2011 Martin Hoefling and Helmut Grubmueller
+# (C) 2012 Martin Hoefling and Helmut Grubmueller
 #
 # Please cite the usage as:
 # Hoefling M, Lima N, Haenni D, Seidel CAM, Schuler B, Grubmueller H,  

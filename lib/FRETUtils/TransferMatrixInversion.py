@@ -187,10 +187,12 @@ def fittingOpenopt(pearr,tmatrix,minR,maxR,lbounds,ubounds,gmaxtime,pfact):
             
     nrgauss,a_final, r_final, sig_final = x2parms(xopt)
 
-    print "Gaussian Prefactors:",a_final
-    print "Gaussian Positions:",r_final
-    print "Gaussain width sigma:",sig_final
-
+    print "G\tA\t\tx0\t\tsigma"
+    nr=1
+    for a,r,sig in zip(a_final,r_final,sig_final):
+        print "%d\t%f\t%f\t%f\t"%(nr,a,r,sig)
+        nr+=1
+        
     gaussians = (a_final*numpy.exp(-(xxarr.T-r_final)**2/(2.0*sig_final**2)))
     r_prdist = gaussians.sum(axis=1)  
     e_fitprdist=numpy.dot(r_prdist,tmatrix.getMatrix())    
