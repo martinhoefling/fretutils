@@ -34,11 +34,11 @@ class testSecureConfigParser(unittest.TestCase):
         config3 = Config.ReconstructionConfigParser()
         
         tf = tempfile.mktemp()
-        tfh=open(tf,"w")
-        config1.write(tfh)
-        tfh.close()
-        tfh2 = open(tf)
-        config2.readfp(tfh2)
+        with open(tf,"w") as tfh:
+            config1.write(tfh)
+        with open(tf) as tfh2:
+            config2.readfp(tfh2)
+            
         config3.read(tf)
-        tfh2.close()
+        
     

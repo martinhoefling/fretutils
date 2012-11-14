@@ -26,7 +26,8 @@ def getSecureConfig(conffile,parser):
     if not os.path.exists(conffile):
         with open(conffile,"w") as configfile:
             config.write(configfile)
-    config.readfp(open(conffile))
+    with open(conffile) as rfp:
+        config.readfp(rfp)
     return config
 
 def getFRETConfig(conffile):
@@ -101,54 +102,43 @@ def writeOutputFiles(options, config, bursts):
     print "Preparing output."
     if options.binaryofile:
         print "Binary output requested, this may take a while..."
-        fh = open(options.binaryofile, "w")
-        cPickle.dump(bursts, fh)
-        fh.close()
-        print "Binary output (pickled data) written to ", options.binaryofile
+        with open(options.binaryofile, "w") as fh:
+            cPickle.dump(bursts, fh)
+            print "Binary output (pickled data) written to ", options.binaryofile
     if options.efficiencyofile:
         print "Burst efficiency output requested."
-        fh = open(options.efficiencyofile, "w")
-        savetxt(fh, efficienciesFromBursts(config, bursts))
-        fh.close()
-        print "Burst efficiencies written to ", options.efficiencyofile
+        with open(options.efficiencyofile, "w") as fh:
+            savetxt(fh, efficienciesFromBursts(config, bursts))
+            print "Burst efficiencies written to ", options.efficiencyofile
     if options.burstsizeofile:
         print "Burst size output requested."
-        fh = open(options.burstsizeofile, "w")
-        norm = sizesFromBursts(bursts)
-        corr = sizesFromBursts(bursts, corrected=True, QD=config.get("Dye Constants", "QD"), QA=config.get("Dye Constants", "QA"))
-        savetxt(fh, array((norm, corr)).T)
-        fh.close()
-        print "Burst size written to ", options.burstsizeofile
+        with open(options.burstsizeofile, "w") as fh:
+            norm = sizesFromBursts(bursts)
+            corr = sizesFromBursts(bursts, corrected=True, QD=config.get("Dye Constants", "QD"), QA=config.get("Dye Constants", "QA"))
+            savetxt(fh, array((norm, corr)).T)
+            print "Burst size written to ", options.burstsizeofile
     if options.burstcompofile:
         print "Burstcomposition output requested."
-        fh = open(options.burstcompofile, "w")
-        for myburst in bursts:
-            fh.write("%d %d %d %d\n" % (myburst.donorphot, myburst.acceptorphot, myburst.donortherm, myburst.acceptortherm))
-        
-        fh.close()
-        print "Burstcomposition written to ", options.burstcompofile
+        with open(options.burstcompofile, "w") as fh:
+            for myburst in bursts:
+                fh.write("%d %d %d %d\n" % (myburst.donorphot, myburst.acceptorphot, myburst.donortherm, myburst.acceptortherm))
+            print "Burstcomposition written to ", options.burstcompofile
     if options.endtimeofile:
         print "Endtime output requested."
-        fh = open(options.endtimeofile, "w")
-        for burst in bursts:
-            for phot in burst.photons:
-                fh.write("%f " % phot.endtime)
-            
-            fh.write("\n")
-        
-        fh.close()
-        print "Endtimes written to ", options.endtimeofile
+        with open(options.endtimeofile, "w") as fh: 
+            for burst in bursts:
+                for phot in burst.photons:
+                    fh.write("%f " % phot.endtime)
+                fh.write("\n")
+            print "Endtimes written to ", options.endtimeofile
     if options.decaytimeofile:
         print "Decaytime output requested."
-        fh = open(options.decaytimeofile, "w")
-        for burst in bursts:
-            for phot in burst.photons:
-                fh.write("%f " % phot.duration)
-            
-            fh.write("\n")
-        
-        fh.close()
-        print "Decaytimes written to ", options.decaytimeofile
+        with open(options.decaytimeofile, "w") as fh:
+            for burst in bursts:
+                for phot in burst.photons:
+                    fh.write("%f " % phot.duration)
+                fh.write("\n")
+            print "Decaytimes written to ", options.decaytimeofile
     print "Finished!"
 
 
@@ -268,11 +258,8 @@ def runTrajPrbAdd(options):
         config = None
         
     print "Writing to",options.outtrajfile
-    try:
-        fh=open(options.outtrajfile,"w")
+    with open(options.outtrajfile,"w") as fh:
         writeRKProbTraj(fh,trajectories,eprobabilities,config)
-    finally:
-        fh.close()
 
 def validateOptions(options):
     if not options.efficiencyfile:
@@ -299,13 +286,14 @@ def runBurstDistAVGs(options):
         print "Setting up RNG seed to %d" % options.rseed
         random.seed(options.rseed)
     trajectories, eprobabilities = readTrajAndClasses(options)   
-    config.sethidden("Burst Size Distribution", "bsdfile", options.expbfile,str)
     config = getDistAVGConfig(options.configfilename)
+    config.sethidden("Burst Size Distribution", "bsdfile", options.expbfile,str)
+
     distbursts = getDistanceBursts(trajectories,eprobabilities,config)
     if options.distoutfile:
         print "Burst efficiency output requested."
-        fh = open(options.distoutfile, "w")
-        savetxt(fh, distbursts)
-        fh.close()
+        with open(options.distoutfile, "w") as fh:
+            savetxt(fh, distbursts)
+            
     
     

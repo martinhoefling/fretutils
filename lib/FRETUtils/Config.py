@@ -129,10 +129,13 @@ class ReconstructionConfigParser(SecureConfigParser):
         
 class BurstDistAVGConfigParser(SecureConfigParser):
     def __init__(self):
+        SecureConfigParser.__init__(self)
         self.setdefault("Burst Size Distribution", "method", "analytical", str, lambda x: x in ["analytical","file"], "must be analytical or file")
         self.setdefault("Burst Size Distribution", "llimit", 20, int, lambda x: x>0,"must be positive" )
         self.setdefault("Burst Size Distribution", "ulimit", 80, int, lambda x: x>0,"must be positive" )
         self.setdefault("Burst Size Distribution", "lambda", -2.3, float, lambda x: x<0,"must be negative" )
         self.setdefault("Burst Size Distribution", "nbursts", 10000, int, lambda x: x>0,"must be positive" )
+        self.setdefault("Burst Size Distribution", "apply", "true-photon", str, lambda x: x in ["true-photon","corrected"] , "must be true-photon or corrected")
+        
         self.setdefault("Burst Accumulation", "method", "trajectory", str, lambda x: x in ["trajectory","same-species","all"] ,"must be one of trajectory, same-species or all" )
         

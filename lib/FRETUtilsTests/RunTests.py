@@ -254,7 +254,7 @@ class testFullRun(unittest.TestCase):
         options.configfilename="cython.conf"
         options.expbfile="expbursts.bst"
         try:
-            from FRETUtils.PhotonGenerator import tryGetCythonPhoton
+            from FRETUtils.PhotonGenerator import tryGetCythonPhoton #@UnusedImport
             runMCFRET(options)
             self.assertAlmostEqual(numpy.loadtxt("effs.txt").mean(),0.5,delta=0.05)      
         except ImportError:
@@ -269,7 +269,7 @@ class testFullRun(unittest.TestCase):
         options.configfilename="cextension.conf"
         options.expbfile="expbursts.bst"
         try:
-            from FRETUtils.PhotonGenerator import tryGetCPhoton
+            from FRETUtils.PhotonGenerator import tryGetCPhoton #@UnusedImport
             runMCFRET(options)
             self.assertAlmostEqual(numpy.loadtxt("effs.txt").mean(),0.5,delta=0.05)      
         except ImportError:
@@ -372,10 +372,10 @@ class testFullRKPrbConversion(unittest.TestCase):
         options.pbfile="mixed.prb"
         runTrajPrbAdd(options)
         outdata=numpy.loadtxt(options.outtrajfile,comments="#")
-        self.assertAlmostEqual(outdata[500,3],0.5,delta=0.0001)     
-        self.assertAlmostEqual(outdata[1500,3],0.25,delta=0.0001)
-        self.assertAlmostEqual(outdata[2500,3],0.25,delta=0.0001)
-        self.assertAlmostEqual(outdata[3500,3],0.0,delta=0.0001)
+        self.assertAlmostEqual(outdata[500,3],0.5/1000,delta=0.0001)     
+        self.assertAlmostEqual(outdata[1500,3],0.25/1000,delta=0.0001)
+        self.assertAlmostEqual(outdata[2500,3],0.25/1000,delta=0.0001)
+        self.assertAlmostEqual(outdata[3500,3],0.0/1000,delta=0.0001)
         
     def test_trajPhotonFlooding(self):
         options = FakeOptionsRK()
@@ -383,7 +383,7 @@ class testFullRKPrbConversion(unittest.TestCase):
         options.configfilename="standardRK.conf"
         runTrajPrbAdd(options)
         outdata=numpy.loadtxt(options.outtrajfile,comments="#")
-        self.assertAlmostEqual(outdata[:,3].sum(),8100,delta=100) 
+        self.assertAlmostEqual(outdata[:,3].sum(),8100./1000,delta=100./1000) 
 
     def test_trajClippingPhotonFlooding(self):
         options = FakeOptionsRK()
@@ -431,6 +431,6 @@ class testFullRKPrbConversionMultiprocessing(unittest.TestCase):
         options.configfilename="standardRKmulti.conf"
         runTrajPrbAdd(options)
         outdata=numpy.loadtxt(options.outtrajfile,comments="#")
-        self.assertAlmostEqual(outdata[:,3].sum(),16200,delta=100)
+        self.assertAlmostEqual(outdata[:,3].sum(),16200./1000,delta=100./1000)
 
                            

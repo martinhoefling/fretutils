@@ -40,7 +40,7 @@ def readRKPrbSamples(rkappafile):
 def constructGlobalTM(options,config,burstGenerator):
     myrange = getRange(config)
     if options.rkappafile:
-        RSamples,KappaSamples,SampleWeights = readRKPrbSamples(options.rkappafile)    
+        RSamples,_KappaSamples,_SampleWeights = readRKPrbSamples(options.rkappafile)    
         if not myrange:
             config.set("Transfer Matrix","from distance",RSamples.min())
             config.set("Transfer Matrix","to distance",RSamples.max())

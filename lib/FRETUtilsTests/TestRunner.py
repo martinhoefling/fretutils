@@ -19,7 +19,7 @@ def runAllTests(directory="."):
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 def runSelectedTests():
-    pass
+    print "Selected Tests"
 
 if __name__ == "__main__":
     runAllTests()

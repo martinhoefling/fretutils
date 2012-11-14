@@ -60,19 +60,19 @@ def getAcceptRejectBurst(table,mina,maxa):
 def readBurstSizes(fname,corrected=True):
     """Reads experimental burst sizes from FRET comma separated file with 4 columns. 1st & 2nd raw donor and acceptor count, 3rd and 4th corrected count"""
     expbs=[]
-    fh = open(fname)
+    with open(fname) as fh:
 
-    for line in fh:
-        spl = line.split(",")
-        if len(spl)==4:
-            if corrected:
-                acceptor=float(spl[2])
-                donor=float(spl[3])   
-            else:
-                acceptor=float(spl[0])
-                donor=float(spl[1])
-            
-            expbs.append(int(acceptor+donor))
+        for line in fh:
+            spl = line.split(",")
+            if len(spl)==4:
+                if corrected:
+                    acceptor=float(spl[2])
+                    donor=float(spl[3])   
+                else:
+                    acceptor=float(spl[0])
+                    donor=float(spl[1])
+                
+                expbs.append(int(acceptor+donor))
 
     return numpy.array(expbs)
 

@@ -9,20 +9,20 @@ import re
 
 def readProbabilities(pbfile):
     """Reads in probabilities from a specific probability file, 1st colum is the regexp to match, 2nd the name and 3rd the probability in the ensemble"""
-    pfh=open(pbfile)
-    probabilities=[]
-    print
-    for line in pfh:
-        spl = line.split()
-        if len(spl) == 0:
-            continue
-            
-        if len(spl) !=3:
-            print "Line split is :",spl
-            raise ValueError("Line in probability file has not 3 entries.")
-        probabilities.append((spl[1],re.compile(spl[0]),float(spl[2])))
-        print "Found ensemble class",spl[1],"with probability %6.4f."%(float(spl[2]))
-    print
+    with open(pbfile) as pfh: 
+        probabilities=[]
+        print
+        for line in pfh:
+            spl = line.split()
+            if len(spl) == 0:
+                continue
+                
+            if len(spl) !=3:
+                print "Line split is :",spl
+                raise ValueError("Line in probability file has not 3 entries.")
+            probabilities.append((spl[1],re.compile(spl[0]),float(spl[2])))
+            print "Found ensemble class",spl[1],"with probability %6.4f."%(float(spl[2]))
+        print
     return probabilities
 
 def assignTrajProbabilityClasses(trajs,probabilities):

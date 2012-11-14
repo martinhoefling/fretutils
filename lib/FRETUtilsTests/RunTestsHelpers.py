@@ -65,146 +65,88 @@ def createStepFunctionDummyRKTrajWithL(filename,nrsamples,dt,Rval1,Rval2,kappava
         raise ValueError("Invalid file format.",fformat)
 
 def createProbabilityClassFile(fname,classes,prbs):
-    try:
-        f=open(fname,"w")
+    with open(fname,"w") as f:
         for i in range(len(classes)):
             f.write(".*%s.* %s %6.4f\n"%(classes[i],classes[i],prbs[i]))
-    finally:
-        f.close()     
 
 def writeBurstFile():
-    try:
-        f=open("expbursts.bst","w")
+    with open("expbursts.bst","w") as f:
         f.write(bursts)
-    finally:
-        f.close()   
-
+        
 def writeInvalidDummyFile():
-    try:
-        f=open("invalid.inv","w")
+    with open("invalid.inv","w") as f:
         f.write("invalid")
-    finally:
-        f.close()   
-
 
 def writeInvalidBurstFile():
-    try:
-        f=open("expburstsinvalid.bst","w")
+    with open("expburstsinvalid.bst","w") as f:
         f.write(bursts)
         f.write("1,2,3,4,5\n")
-    finally:
-        f.close()   
         
 def writeConfigFiles():
-    try:
-        fh=open("standard.conf","w")
+    with open("standard.conf","w") as fh:
         fh.write(configfile)
-    finally:
-        fh.close()
     
     config = ConfigParser.RawConfigParser()
     config.read('standard.conf')
     
     config.set('Burst Accumulation','method','same-species')
-    try:
-        fh=open("same-species.conf","w")
+
+    with open("same-species.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()    
 
     config.set('Burst Accumulation','method','invalid')
-    try:
-        fh=open("invalidburstacc.conf","w")
+    with open("invalidburstacc.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()    
-
 
     config.set('Burst Accumulation','method','all')
-    try:
-        fh=open("all.conf","w")
+    with open("all.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()    
 
     config.set('System','ncpu','2')
-    try:
-        fh=open("dual.conf","w")
+    with open("dual.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()            
 
     config.set('System','ncpu','-1')
     config.set('System','blocksize',"2")
-    try:
-        fh=open("multi.conf","w")
+    with open("multi.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()    
 
     config.set('Dye Constants','QD','0.5')
     config.set('Dye Constants','QA','0.5')
     config.set('System','ncpu','1')
-    try:
-        fh=open("thermal.conf","w")
+    with open("thermal.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()    
-
-
 
     config.set('Burst Size Distribution','apply','invalid')
-    try:
-        fh=open("invalidbscutoff.conf","w")
+    with open("invalidbscutoff.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()             
-
 
     config.set('Burst Size Distribution','apply','corrected')
-    try:
-        fh=open("corrected.conf","w")
+    with open("corrected.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()             
 
     config.set('Burst Size Distribution','method','invalidbsd')
-    try:
-        fh=open("invalidbsd.conf","w")
+    with open("invalidbsd.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close() 
 
     config.set('Burst Size Distribution','method','file')
-    try:
-        fh=open("expbstcorr.conf","w")
+    with open("expbstcorr.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()  
                   
     config.set('Burst Size Distribution','method','file')
     config.set('Burst Size Distribution','apply','true-photon')
-    try:
-        fh=open("expbst.conf","w")
+    with open("expbst.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()  
     
     config.set('Monte Carlo','minstarttraj','110000')
     config.set('Monte Carlo','maxstarttraj','110000')
-    try:
-        fh=open("wrongminmaxstart.conf","w")
+    with open("wrongminmaxstart.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()
         
     config.set('Monte Carlo','minstarttraj','-100000')
     config.set('Monte Carlo','maxstarttraj','100000')
-    try:
-        fh=open("wrongminmaxstart2.conf","w")
+    with open("wrongminmaxstart2.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()   
 
     config.set('Monte Carlo','minstarttraj','0')
     config.set('Monte Carlo','maxstarttraj','1000')
@@ -213,82 +155,52 @@ def writeConfigFiles():
 
     for i in ("trajectory","same-species","all"):
         config.set('Burst Accumulation','method',i)
-        try:
-            fh=open("rejecttest-%s.conf"%i,"w")
+        with open("rejecttest-%s.conf"%i,"w") as fh:
             config.write(fh)
-        finally:
-            fh.close()  
-
-
 
     config.set('Monte Carlo','globalrejectretry','100000')
     config.set('Monte Carlo','photrejectdist','2')
     config.set("Monte Carlo","nbursts","5")
 
-    try:
-        fh=open("stepreject.conf","w")
+    with open("stepreject.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()  
 
     config.set("Monte Carlo","nbursts","50")
     config.set('System','photongenerator','cython')
-    try:
-        fh=open("cython.conf","w")
+    with open("cython.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()  
 
     config.set('System','photongenerator','cextension')
-    try:
-        fh=open("cextension.conf","w")
+    with open("cextension.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()  
 
     config.set('System','photongenerator','invalid')
-    try:
-        fh=open("invalid_photongenerator.conf","w")
+    with open("invalid_photongenerator.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()  
 
 def writeRKConfigFiles():
-    try:
-        fh=open("standard.conf","w")
+    with open("standard.conf","w") as fh:
         fh.write(configfile)
-    finally:
-        fh.close()
     
     config = ConfigParser.RawConfigParser()
     config.read('standard.conf')
     config.set('Monte Carlo','minstarttraj','0')
     config.set('Monte Carlo','maxstarttraj','0')
-    try:
-        fh=open("standardRK.conf","w")
+    with open("standardRK.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()  
     
     config.set('System','ncpu','-1')
     config.set('Photon Flooding','photoncount','20')
 
-    try:
-        fh=open("standardRKmulti.conf","w")
+    with open("standardRKmulti.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close() 
     
     config.set('System','ncpu','1')
     config.set('Photon Flooding','photoncount','5')
     config.set('Photon Flooding','startclip','20')
     config.set('Photon Flooding','endclip','40')
-    try:
-        fh=open("standardRKclip.conf","w")
+    with open("standardRKclip.conf","w") as fh:
         config.write(fh)
-    finally:
-        fh.close()  
-
 
 configfile="""[Dye Constants]
 tauD=4000

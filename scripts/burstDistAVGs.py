@@ -17,10 +17,11 @@ def getCmdlineOptions():
                       help="directory with R-Kappa trajectories", default=".",metavar="RKDIR")
     group1.add_option("-p", "--probabilites",dest="pbfile", 
                       help="definition and probability of trajectory classes", default = "probabilities.dat",metavar="probabilities.dat")
+    group1.add_option("-c", "--configfile",dest="configfilename", 
+                      help="configuration filename, default file will be written if file does not exist", default = "distAVG.conf")
+
     
     group2 = OptionGroup(parser, "Optional input")
-    group2.add_option("-c", "--configfile",dest="configfilename", 
-                      help="configuration filename, default file will be written if file does not exist", default = None,metavar="fret.conf")
     group2.add_option("-k", "--expbursts",dest="expbfile", 
                       help="experimental bursts size distribution file", default = None,metavar="exp.dat")    
     group2.add_option("-s", "--seed",dest="rseed", 
