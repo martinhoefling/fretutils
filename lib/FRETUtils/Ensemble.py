@@ -48,14 +48,17 @@ def getClassTrajCount(myclass, trajs):
             counter += 1
     return counter
 
-# def getClassTrajSamples(myclass,trajs):
-#    """counts the samples from all trajectories of a distinct class"""
-#    counter=0
-#    for trajk in trajs.keys():
-#        if trajs[trajk]["species"] == myclass:
-#            counter+=trajs["length"]
-#    return counter
+ def getClassTrajSamples(myclass,trajs):
+    """counts the samples from all trajectories of a distinct class"""
+    counter=0
+    for trajk in trajs.keys():
+        if trajs[trajk]["species"] == myclass:
+            counter+=trajs[trajk]["length"]
+    return counter
 
+def getClassTrajWeight(key,myclass,trajs):
+    classsamples = getClassTrajSamples(myclass,trajs)
+    return float(trajs[key]["length"])/classsamples
 
 def cleanProbabilities(trajs, probs):
     """removes all probability classes from probability dictionary which do not have any trajectory"""
@@ -85,39 +88,4 @@ def getTrajClassProbability(traj, probabilities):
         if pr[0] == traj["species"]:
             return pr[2]
 
-# def getClassProbability(myclass,probabilities):
-#    """returns the probability value of a distinct class"""
-#    for pr in probabilities:
-#        if pr[0]==myclass:
-#            return pr[2]
 
-# def val2AvgStdErr(classvals,myclass,myval):
-#    """sorts in value of trajectory into classval dictionary for later std err calculation"""
-#
-#    if classvals.has_key(myclass):
-#        classvals[myclass].append(myval)
-#    else:
-#        classvals[myclass]=[]
-#        classvals[myclass].append(myval)
-
-# def calcAvgStdErr(classvals,prb):
-#    """Calculates the mean and std. error from per trajectory values with given class ensemble probabilities."""
-#    for ckey in classvals:
-#        a=array(classvals[ckey])
-#        classvals[ckey]=(a.mean(),a.std()/math.sqrt(len(a)))
-#        print "Key",ckey," has std.err. of",classvals[ckey][1],"average of",len(a),"values is",classvals[ckey][0]
-#
-#    mysum=0.
-#    esum=0.
-#    classps=0.
-#    for ckey in classvals:
-#        classp=getClassProbability(ckey,prb)
-#        print "Class",ckey,"has probability",classp
-#        mysum+=classp*classvals[ckey][0]
-#        esum+=classp**2*classvals[ckey][1]**2
-#        classps+=classp
-#
-#    mysum/=classps
-#    esum=math.sqrt(esum)/classps
-#    print "Total class probability is",classps,"Average is",mysum,"with standard error",esum
-#    return mysum,esum
