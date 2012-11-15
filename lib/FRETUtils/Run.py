@@ -278,8 +278,8 @@ def runReconstruction(options):
         random.seed(options.rseed)
     effhist = readEfficiencies(options.efficiencyfile, config.get("Transfer Matrix", "efficiency bins"))
     TM = constructTM(options, config)
-    r_prdist, xrange, e_fitprdist, fitvals = resolveDistances(config, TM, effhist)
-    writeDistances(xrange, r_prdist, options)
+    r_prdist, mxrange, _e_fitprdist, _fitvals = resolveDistances(config, TM, effhist)
+    writeDistances(mxrange, r_prdist, options)
 
 def runBurstDistAVGs(options):
     if options.rseed:

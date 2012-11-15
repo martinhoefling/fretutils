@@ -29,8 +29,21 @@ def generateBurst(trajs, eprob, conf, burstsize):
         return generateBurstFromSingleTraj(eprob, trajs, conf, burstsize)
 
 
+def getRandomDistanceBasedOnOccupancy(traj):
+    if not traj.has_key("cumsum"):
+        cs = traj["l"].cumsum()
+        if cs[-1]==0:
+            raise ValueError("Trajectory %s has invalid probabilities in column 4"%(traj["fname"]))
+        cs /= cs[-1]
+        traj["cumsum"] = cs
+    ndx = traj["cumsum"].searchsorted(random.random())
+    return traj["R"][ndx]
+
 def getRandomDistance(traj):
-    return random.choice(traj["R"])
+    if traj.has_key("l"):
+        return getRandomDistanceBasedOnOccupancy(traj)
+    else:
+        return random.choice(traj["R"])
 
 
 def generateBurstFromAllTraj(eprob, trajs, conf, burstsize):

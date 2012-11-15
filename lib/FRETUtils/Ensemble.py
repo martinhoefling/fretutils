@@ -48,7 +48,7 @@ def getClassTrajCount(myclass, trajs):
             counter += 1
     return counter
 
- def getClassTrajSamples(myclass,trajs):
+def getClassTrajSamples(myclass,trajs):
     """counts the samples from all trajectories of a distinct class"""
     counter=0
     for trajk in trajs.keys():
@@ -56,7 +56,8 @@ def getClassTrajCount(myclass, trajs):
             counter+=trajs[trajk]["length"]
     return counter
 
-def getClassTrajWeight(key,myclass,trajs):
+def getClassTrajWeight(key,trajs):
+    myclass = trajs[key]["species"]
     classsamples = getClassTrajSamples(myclass,trajs)
     return float(trajs[key]["length"])/classsamples
 

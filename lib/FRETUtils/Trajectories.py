@@ -70,10 +70,12 @@ def readTrajs(trajs, fformat):
         print "Reading trajectory \"%s\"." % key
         trajdict = {}
         fullarr = loadSingleTraj(key, fformat)
+        trajdict["fname"]=key
         trajdict["t"] = fullarr[:, 0]
         trajdict["R"] = fullarr[:, 1]
         trajdict["k2"] = fullarr[:, 2]
         if fullarr.shape[1] > 3:
+            print "-> Found fourth column in file. Reading in as well."
             trajdict["l"] = fullarr[:, 3]
         trajdict["length"] = trajdict["t"].shape[0]
         print "-> %d samples read." % trajdict["length"]
