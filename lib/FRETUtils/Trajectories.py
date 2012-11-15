@@ -109,7 +109,7 @@ def getRandomTrajectory(trajs, species):
 
     while True:
         testkey = random.choice(allowedkeys)
-        if testkey >= random.random() * maxsamples:
+        if testkey[1] >= random.random() * maxsamples:
             return trajs[testkey[0]]
 
 def floodTrajsWithPhotons(trajs, config, randseed):
