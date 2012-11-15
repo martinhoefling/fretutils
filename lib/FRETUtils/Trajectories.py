@@ -29,8 +29,7 @@ def writeRKProbTraj(fh, trajs, probabilities, config):
 
         classprob = getTrajClassProbability(trajs[key], probabilities)
         nrtrajs = getClassTrajCount(trajs[key]["species"], trajs)
-        trajlen = trajs[key]["length"] - startclip - endclip
-        probprefact = classprob / nrtrajs / trajlen
+        probprefact = classprob / nrtrajs
 
         if not trajs[key].has_key("photons"):
             trajs[key]["photons"] = numpy.ones(len(trajs[key]["t"]))
