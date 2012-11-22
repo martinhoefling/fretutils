@@ -6,7 +6,8 @@ Created on 04.10.2012
 
 import unittest, os
 
-from FRETUtilsTests.EfficiencyTests import testEfficiencyFunctions  # @UnusedImport
+
+from FRETUtilsTests.EfficiencyTests import testEfficiencyFunctions  # @UnusedImport IGNORE:W0611
 from FRETUtilsTests.EnsembleTests import testEnsembleFunctions  # @UnusedImport
 from FRETUtilsTests.HelperTests import testHelperFunctions  # @UnusedImport
 from FRETUtilsTests.PhotonsTests import testPhotonFunctions  # @UnusedImport

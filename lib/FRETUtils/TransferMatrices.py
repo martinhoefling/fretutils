@@ -79,11 +79,17 @@ class TransferMatrix(object):
         plt.xticks(np.arange(len(xdist))[ndxx], xdist[ndxx])
         plt.yticks((xeff * len(xeff))[ndxe], xeff[ndxe])
 
+    def plotToFile(self, plotfile):
+        plt.figure()
+        self.plot()
+        plt.savefig(plotfile)
+
 
 
 class GlobalAVGKappaTransferMatrix(TransferMatrix):
     def __init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RRange):
         TransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RRange)
+        print "Calculating transfer matrix with %d efficiency bins and %d R-bins from %6.2f to %6.2f" % (self.EffBins, self.RBins, self.RRange[0], self.RRange[1])
 
     def populateMatrixWithBurst(self, rbinindex, reff, burst, weight):
         effval = genRandomBurstEffs(reff, burst)
@@ -133,30 +139,37 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
 
     def genRIndex(self, R):
         Rind = int((R - self.RRange[0]) / (self.myrange / self.RBins))
-        if Rind == self.RBins:
-            Rind -= 1
+        if R == self.RRange[1]:
+            Rind = self.RBins - 1
         return Rind
 
     def binKappa(self):
+        print "Binning R-Kappa Samples."
         kappaavgnum = np.zeros((self.RBins), np.float64)
+        skipped = 0
         for R, K, prb in zip(self.RSamples, self.KappaSamples, self.SampleWeights):
             Rind = self.genRIndex(R)
-            if Rind < 0 or Rind > self.RBins:
-                continue
-            self.addToBin(kappaavgnum, R, K, prb, Rind)
+            if  Rind >= 0 and Rind < self.RBins:
+                self.addToBin(kappaavgnum, R, K, prb, Rind)
+            else:
+                skipped += 1
 
         self.binKappaSanityCheck(kappaavgnum)
         self.kappaavg /= kappaavgnum
         self.kappaBinned = True
+        print "%d samples outside R-range" % skipped
+        print "R-Kappa binning complete."
 
     def binKappaSanityCheck(self, kappaavgnum):
-        if not (kappaavgnum > 0).all():
-            raise ValueError("Not all kappa bins have at least one sample. Adjust number of distance-bins or distance range")
-        print "There are at least %d kappa samples in each r-bin." % kappaavgnum.min()
+        if kappaavgnum.min() == 0:
+            raise ValueError("Not all kappa bins have at least one sample. Adjust number of distance-bins or distance range.", (kappaavgnum == 0).nonzero()[0] * self.myrange / self.RBins + self.RRange[0])
+        print "There are at least %d kappa samples in each R-bin." % kappaavgnum.min()
 
     def getR0(self, binnr):
         if not self.kappaBinned:
             self.binKappa()
+
+        print "Bin %d - kappa %6.2f" % (binnr, self.kappaavg[binnr])
         return modifyR0(self.R0, self.kappaavg[binnr])
 
     def getKappaAVG(self):
@@ -176,7 +189,9 @@ class DistanceKappaTransferMatrix(DistanceAVGKappaTransferMatrix):
 
     def getBinEfficiencies(self, binnr):
         if not self.kappaBinned:
+
             self.binKappa()
+            print "Done."
 
         if len(self.rkappaBinned[binnr]) == 0:
             raise ValueError("Bin #%d is empty. This is a problem. Try setting a smaller range and fewer bins in R-direction." % binnr)
@@ -188,16 +203,17 @@ class DistanceKappaTransferMatrix(DistanceAVGKappaTransferMatrix):
         Rarr = rkprb[:, 0]
         Kappaarr = rkprb[:, 1]
         Prbarr = rkprb[:, 2]
-        R0_mod = modifyR0(self.R0, Kappaarr)
+        R0s_mod = modifyR0(self.R0, Kappaarr)
 
         cumulprb = Prbarr.cumsum()
         cumulprb /= cumulprb[-1]
         for burst in bursts:
             randnrs = np.random.random(burst)
             ndxchoice = cumulprb.searchsorted(randnrs)
-            effs = rToEff(Rarr[ndxchoice], R0_mod[ndxchoice])
-            beffs.append(effs.mean())
+            effs = rToEff(Rarr[ndxchoice], R0s_mod[ndxchoice])
+            beffs.append(effs)
 
+        print "%d Efficiencies for bursts in bin %d calculated from %d R-K samples" % (len(beffs), binnr, len(R0s_mod))
         return beffs, bursts
 
 

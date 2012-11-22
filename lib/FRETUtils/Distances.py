@@ -6,10 +6,19 @@ Created on 13.11.2012
 
 from FRETUtils.Bursts import getBurstSizes
 from FRETUtils.Efficiencies import getBurstSizeGenerator
-from FRETUtils.Ensemble import pickFromEnsemble
+from FRETUtils.Ensemble import pickFromEnsemble, getTrajClassProbability
 from FRETUtils.Trajectories import getRandomTrajectory
 import numpy
 import random
+
+def normalizeTrajProbForSpecies(trajs, probs):
+    for trajkey in trajs:
+        traj = trajs[trajkey]
+        if not traj.has_key("l"):
+            continue
+        print "Correcting trajectory", trajkey, "for class probability in 4th column."
+        prb = getTrajClassProbability(traj, probs)
+        traj["l"] *= prb
 
 
 def generateBurst(trajs, eprob, conf, burstsize):
@@ -32,8 +41,8 @@ def generateBurst(trajs, eprob, conf, burstsize):
 def getRandomDistanceBasedOnOccupancy(traj):
     if not traj.has_key("cumsum"):
         cs = traj["l"].cumsum()
-        if cs[-1]==0:
-            raise ValueError("Trajectory %s has invalid probabilities in column 4"%(traj["fname"]))
+        if cs[-1] == 0:
+            raise ValueError("Trajectory %s has invalid probabilities in column 4" % (traj["fname"]))
         cs /= cs[-1]
         traj["cumsum"] = cs
     ndx = traj["cumsum"].searchsorted(random.random())
@@ -44,7 +53,6 @@ def getRandomDistance(traj):
         return getRandomDistanceBasedOnOccupancy(traj)
     else:
         return random.choice(traj["R"])
-
 
 def generateBurstFromAllTraj(eprob, trajs, conf, burstsize):
     distances = []
@@ -84,6 +92,7 @@ def getDistanceBursts(trajectories, probabilities, config):
     burstdists = []
     for bs in burstsizelist:
         burstdists.append(generateBurst(trajectories, probabilities, config, bs))
-        print "\r %d of %d completed." % (len(burstdists), len(burstsizelist)),
+        if (len(burstdists) % 100 == 0):
+            print "\r %d of %d completed." % (len(burstdists), len(burstsizelist)),
 
     return numpy.array(burstdists)

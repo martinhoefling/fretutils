@@ -11,7 +11,7 @@ from FRETUtils.Trajectories import createTrajectoryList, readTrajs, calcFRETRate
 from FRETUtils.Config import FRETConfigParser, ReconstructionConfigParser, BurstDistAVGConfigParser
 from FRETUtils.Reconstruction import readEfficiencies, constructTM, \
     resolveDistances, writeDistances
-from FRETUtils.Distances import getDistanceBursts
+from FRETUtils.Distances import getDistanceBursts, normalizeTrajProbForSpecies
 
 
 import random
@@ -278,7 +278,13 @@ def runReconstruction(options):
         random.seed(options.rseed)
     effhist = readEfficiencies(options.efficiencyfile, config.get("Transfer Matrix", "efficiency bins"))
     TM = constructTM(options, config)
+
     r_prdist, mxrange, _e_fitprdist, _fitvals = resolveDistances(config, TM, effhist)
+
+    if options.tmplotfile:
+        print "Writing Transfer Matrix Plot"
+        TM.plotToFile(options.tmplotfile)
+
     writeDistances(mxrange, r_prdist, options)
 
 def runBurstDistAVGs(options):
@@ -286,6 +292,7 @@ def runBurstDistAVGs(options):
         print "Setting up RNG seed to %d" % options.rseed
         random.seed(options.rseed)
     trajectories, eprobabilities = readTrajAndClasses(options)
+    normalizeTrajProbForSpecies(trajectories, eprobabilities)
     config = getDistAVGConfig(options.configfilename)
     config.sethidden("Burst Size Distribution", "bsdfile", options.expbfile, str)
 

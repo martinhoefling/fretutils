@@ -31,6 +31,8 @@ def getCmdlineOptions():
     group3 = OptionGroup(parser, "Output options")
     group3.add_option("-o", "--output-distances", dest = "outdistfile",
                       help = "distance histogram output file", default = "distout.txt")
+    group3.add_option("-x", "--output-tm", dest = "tmplotfile", default = None,
+                      help = "transfer matrix plot", metavar = "tmplot.pdf")
 
     parser.add_option_group(group1)
     parser.add_option_group(group2)

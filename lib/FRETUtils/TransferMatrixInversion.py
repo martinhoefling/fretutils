@@ -7,7 +7,7 @@ Created on 15.10.2012
 '''
 
 import numpy
-from openopt import GLP  # ,NLP
+from openopt import GLP, NLP
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -181,8 +181,13 @@ def fittingOpenopt(pearr, tmatrix, minR, maxR, lbounds, ubounds, gmaxtime, pfact
     # result=prob.solve('auglag')
     # result=prob.solve('gsubg')
 
-
     xopt = result.xf
+
+#    prob2 = prob = NLP(minfuncwrap, xopt , lb = lbounds, ub = ubounds, callback = mycallback, maxNonSuccess = 20, maxIter = 1e5, maxTime = gmaxtime)
+#    result = prob2.solve('scipy_cobyla')
+#    xopt = result.xf
+
+
     print "Minimum function chisq", result.ff
 
     nrgauss, a_final, r_final, sig_final = x2parms(xopt)
