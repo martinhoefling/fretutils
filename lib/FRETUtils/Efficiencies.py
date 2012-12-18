@@ -147,6 +147,12 @@ def generateBurstFromAllTraj(eprob, trajs, conf, burst):
             break
 
 
+
+def addPhotonToBurst(conf, burst, QD, QA, traj):
+    photon = getPhoton(traj, conf)
+    photon.checkThermal(QD, QA)
+    burst.appendPhoton(photon)
+
 def generateBurstFromSameClassTraj(eprob, trajs, conf, burst):
     QD, QA, globalreject, applycorrectedcutoff = setUpBurstGeneration(conf)
 
@@ -156,9 +162,7 @@ def generateBurstFromSameClassTraj(eprob, trajs, conf, burst):
             species = pickFromEnsemble(eprob)
             while True:
                 traj = getRandomTrajectory(trajs, species)
-                photon = getPhoton(traj, conf)
-                photon.checkThermal(QD, QA)
-                burst.appendPhoton(photon)
+                addPhotonToBurst(conf, burst, QD, QA, traj)
 
                 if burst.checkSizeReached(QD, QA, QYcorrected = applycorrectedcutoff):
                     break
@@ -179,9 +183,7 @@ def generateBurstFromSingleTraj(eprob, trajs, conf, burst):
             species = pickFromEnsemble(eprob)
             traj = getRandomTrajectory(trajs, species)
             while True:
-                photon = getPhoton(traj, conf)
-                photon.checkThermal(QD, QA)
-                burst.appendPhoton(photon)
+                addPhotonToBurst(conf, burst, QD, QA, traj)
                 if burst.checkSizeReached(QD, QA, QYcorrected = applycorrectedcutoff):
                     break
 

@@ -57,9 +57,14 @@ class TransferMatrix(object):
     def getMatrix(self):
         if not self.matrixGenerated:
             self.generateMatrix()
+            print "Matrix Generated - Normalization Check"
+            means = self.tm.mean(axis = 1)
+            print "Minimum/maximum distance column sum: %f/%f" % (means.min(), means.max())
         return self.tm
 
     def plot(self):
+        if not self.matrixGenerated:
+            self.generateMatrix()
         xdist = np.linspace(self.RRange[0] + self.myrange / self.RBins / 2, self.RRange[1] - self.myrange / self.RBins / 2, self.RBins)
         xeff = np.linspace(0., 1., self.EffBins, endpoint = False) + 1. / self.EffBins / 2
 
@@ -83,7 +88,6 @@ class TransferMatrix(object):
         plt.figure()
         self.plot()
         plt.savefig(plotfile)
-
 
 
 class GlobalAVGKappaTransferMatrix(TransferMatrix):
@@ -150,7 +154,7 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
         for R, K, prb in zip(self.RSamples, self.KappaSamples, self.SampleWeights):
             Rind = self.genRIndex(R)
             if  Rind >= 0 and Rind < self.RBins:
-                self.addToBin(kappaavgnum, R, K, prb, Rind)
+                self.addToBin(kappaavgnum, R, K, prb ** 0, Rind)
             else:
                 skipped += 1
 
@@ -202,18 +206,32 @@ class DistanceKappaTransferMatrix(DistanceAVGKappaTransferMatrix):
         rkprb = np.array(self.rkappaBinned[binnr])
         Rarr = rkprb[:, 0]
         Kappaarr = rkprb[:, 1]
-        Prbarr = rkprb[:, 2]
-        R0s_mod = modifyR0(self.R0, Kappaarr)
+        Prbarr = rkprb[:, 2] ** 0
+
+#        R0s_mod = modifyR0(self.R0, Kappaarr)
+#
+#        cumulprb = Prbarr.cumsum()
+#        cumulprb /= cumulprb[-1]
+#        for burst in bursts:
+#            randnrs = np.random.random(burst)
+#            ndxchoice = cumulprb.searchsorted(randnrs)
+#            effs = rToEff(Rarr[ndxchoice], R0s_mod[ndxchoice])
+#            beffs.append(effs)
 
         cumulprb = Prbarr.cumsum()
         cumulprb /= cumulprb[-1]
         for burst in bursts:
             randnrs = np.random.random(burst)
             ndxchoice = cumulprb.searchsorted(randnrs)
-            effs = rToEff(Rarr[ndxchoice], R0s_mod[ndxchoice])
+            Ravg = Rarr[ndxchoice].mean()
+            Kavg = Kappaarr[ndxchoice].mean()
+            R0_mod = modifyR0(self.R0, Kavg)
+
+            effs = rToEff(Ravg, R0_mod)
             beffs.append(effs)
 
-        print "%d Efficiencies for bursts in bin %d calculated from %d R-K samples" % (len(beffs), binnr, len(R0s_mod))
+
+        print "%d Efficiencies for bursts in bin %d calculated from %d R-K samples" % (len(beffs), binnr, R0_mod)
         return beffs, bursts
 
 

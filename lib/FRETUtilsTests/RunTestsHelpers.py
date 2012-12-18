@@ -202,6 +202,11 @@ def writeRKConfigFiles():
     with open("standardRKclip.conf", "w") as fh:
         config.write(fh)
 
+    config.set("Monte Carlo", "photrejectdist", 10)
+    config.set("Monte Carlo", "rejectretry", 1)
+    with open("rejectRK.conf", "w") as fh:
+        config.write(fh)
+
 configfile = """[Dye Constants]
 tauD=4000
 tauA=3900

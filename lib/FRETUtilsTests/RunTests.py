@@ -96,7 +96,6 @@ class testFullRun(unittest.TestCase):
         runMCFRET(options)
         self.assertAlmostEqual(numpy.loadtxt("effs.txt").mean(), 0., delta = 0.05)
 
-
     def test_averEff(self):
         options = FakeOptions()
         options.efficiencyofile = "effs.txt"
@@ -383,7 +382,7 @@ class testFullRKPrbConversion(unittest.TestCase):
         options.configfilename = "standardRK.conf"
         runTrajPrbAdd(options)
         outdata = numpy.loadtxt(options.outtrajfile, comments = "#")
-        self.assertAlmostEqual(outdata[:, 3].sum(), 8100./1000, delta = 100. /1000)
+        self.assertAlmostEqual(outdata[:, 3].sum(), 8100. / 1000, delta = 100. / 1000)
 
     def test_trajClippingPhotonFlooding(self):
         options = FakeOptionsRK()
@@ -392,6 +391,15 @@ class testFullRKPrbConversion(unittest.TestCase):
         runTrajPrbAdd(options)
         outdata = numpy.loadtxt(options.outtrajfile, comments = "#")
         self.assertEqual(len(outdata[:, 3]), 3760)
+
+    def test_trajPhotonFloodingRejection(self):
+        options = FakeOptionsRK()
+        options.pbfile = "mixed.prb"
+        options.configfilename = "rejectRK.conf"
+        runTrajPrbAdd(options)
+        outdata = numpy.loadtxt(options.outtrajfile, comments = "#")
+        self.assertAlmostEqual(outdata[:, 3].sum(), 0.0, delta = 100.0 / 1000)
+
 
 class testFullRKPrbConversionMultiprocessing(unittest.TestCase):
     def createTestTrajectories(self):
@@ -431,5 +439,7 @@ class testFullRKPrbConversionMultiprocessing(unittest.TestCase):
         options.configfilename = "standardRKmulti.conf"
         runTrajPrbAdd(options)
         outdata = numpy.loadtxt(options.outtrajfile, comments = "#")
-        self.assertAlmostEqual(outdata[:, 3].sum(), 16200. /1000, delta = 100.0/1000)
+        self.assertAlmostEqual(outdata[:, 3].sum(), 16200. / 1000, delta = 100.0 / 1000)
+
+
 

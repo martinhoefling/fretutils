@@ -13,6 +13,7 @@ from FRETUtilsTests.HelperTests import testHelperFunctions  # @UnusedImport
 from FRETUtilsTests.PhotonsTests import testPhotonFunctions  # @UnusedImport
 from FRETUtilsTests.ConfigTests import testSecureConfigParser  # @UnusedImport
 from FRETUtilsTests.RunTests import testFullRun, testFullRunMultiprocessing, testFullRKPrbConversion, testFullRKPrbConversionMultiprocessing  # @UnusedImport
+from FRETUtilsTests.TransferMatrixTests import TransferMatrixTests
 
 def runAllTests(directory = "."):
     print os.path.abspath(os.curdir)

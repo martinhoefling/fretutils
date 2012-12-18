@@ -28,6 +28,11 @@ class testSecureConfigParser(unittest.TestCase):
         config.setdefault("Invalid", "Invalid", 1, int, lambda x:x > 0, "must be larger zero")
         self.assertRaises(ValueError, config.set, "Invalid", "Invalid", -1)
 
+    def testGetInvalidValue(self):
+        config = Config.SecureConfigParser()
+        self.assertRaises(ValueError, config.get, "Invalid", "Invalid")
+
+
     def testReadWriteReconstruction(self):
         config1 = Config.ReconstructionConfigParser()
         config2 = Config.ReconstructionConfigParser()
@@ -41,3 +46,10 @@ class testSecureConfigParser(unittest.TestCase):
 
         config3.read(tf)
 
+    def testConfigParserConstruction(self):
+        cfg1 = Config.FRETConfigParser()
+        cfg2 = Config.ReconstructionConfigParser()
+        cfg3 = Config.BurstDistAVGConfigParser()
+        self.assertEqual(cfg1.get("Burst Size Distribution", "method"), "analytical")
+        self.assertEqual(cfg2.get("Burst Size Distribution", "method"), "analytical")
+        self.assertEqual(cfg3.get("Burst Size Distribution", "method"), "analytical")

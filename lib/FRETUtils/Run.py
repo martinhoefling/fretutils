@@ -178,10 +178,7 @@ def runMCFRET(options):
     print "Starting efficiency calculation"
     ncpu = config.get("System", "ncpu")
     if ncpu == -1:
-        print "Determining number of available cpu's..."
-        print "-> %d cpus detected" % multiprocessing.cpu_count()
-        ncpu = multiprocessing.cpu_count()
-        config.set("System", "ncpu", "%d" % ncpu)
+        ncpu = autodetectCPUs(config)
 
     if options.prffile:
         print "THIS IS A PROFILING RUN! - will write to logfile and run with only process", options.prffile
@@ -228,6 +225,14 @@ def runMultiprocessPhotonFlooding(trajectories, config):
 
     return bursts
 
+
+def autodetectCPUs(config):
+    print "Determining number of available cpu's..."
+    print "-> %d cpus detected" % multiprocessing.cpu_count()
+    ncpu = multiprocessing.cpu_count()
+    config.set("System", "ncpu", ncpu)
+    return ncpu
+
 def runTrajPhotonFlooding(trajectories, config):
     print
     print "================================ Input prepared ========================="
@@ -235,10 +240,7 @@ def runTrajPhotonFlooding(trajectories, config):
     print "Starting trajectory processing"
     ncpu = config.get("System", "ncpu")
     if ncpu == -1:
-        print "Determining number of available cpu's..."
-        print "-> %d cpus detected" % multiprocessing.cpu_count()
-        ncpu = multiprocessing.cpu_count()
-        config.set("System", "ncpu", ncpu)
+        ncpu = autodetectCPUs(config)
 
     if ncpu > 1:
         runMultiprocessPhotonFlooding(trajectories, config)

@@ -6,7 +6,13 @@ Created on 02.10.2012
 
 import unittest
 from FRETUtils import Photons
+from FRETUtils.Config import SecureConfigParser
 
+
+class DummyConfigParser(SecureConfigParser):
+    def __init__(self):
+        SecureConfigParser.__init__(self)
+        self.setdefault("System", "photongenerator", "holla", str, lambda x: x in ["cython", "python", "cextension", "holla"] , "must be one of cython, python, holla or cextension")
 
 class testPhotonFunctions(unittest.TestCase):
     def setUp(self):
@@ -25,3 +31,9 @@ class testPhotonFunctions(unittest.TestCase):
     def test_acceptor_fluorescence(self):
         self.acceptorphoton.checkThermal(0.0, 1.0)
         self.assertEqual(self.acceptorphoton.thermal, False)
+    def test_InvalidPhotonIndex(self):
+        conf = "dummy"
+        self.assertRaises(IndexError, Photons.getPhoton, [0, 1, 2, 3, 4, 5], conf, -1)
+    def test_InvalidPhotonGeneratorSet(self):
+        cfg = DummyConfigParser()
+        self.assertRaises(ValueError, Photons.setPhotonGenerator, cfg)

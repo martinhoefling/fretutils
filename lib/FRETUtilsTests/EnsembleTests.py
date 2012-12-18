@@ -27,3 +27,29 @@ class testEnsembleFunctions(unittest.TestCase):
 
     def test_readInvalidEnsembleFile(self):
         self.assertRaises(ValueError, Ensemble.readProbabilities, "broken.prb")
+
+    def test_getClassTrajSamples(self):
+        trajs = {}
+        trajs["a"] = {}
+        trajs["b"] = {}
+        trajs["c"] = {}
+        trajs["a"]["species"] = "hey"
+        trajs["b"]["species"] = "ho"
+        trajs["c"]["species"] = "hey"
+        trajs["a"]["length"] = 100
+        trajs["b"]["length"] = 200
+        trajs["c"]["length"] = 400
+        self.assertEqual(Ensemble.getClassTrajSamples("hey", trajs), 500)
+
+    def test_getClassTrajWeight(self):
+        trajs = {}
+        trajs["a"] = {}
+        trajs["b"] = {}
+        trajs["c"] = {}
+        trajs["a"]["species"] = "hey"
+        trajs["b"]["species"] = "ho"
+        trajs["c"]["species"] = "hey"
+        trajs["a"]["length"] = 100
+        trajs["b"]["length"] = 200
+        trajs["c"]["length"] = 400
+        self.assertEqual(Ensemble.getClassTrajWeight("a", trajs), 1. / 5)

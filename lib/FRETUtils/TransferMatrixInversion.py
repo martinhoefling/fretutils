@@ -48,7 +48,6 @@ def GaussianRegularizationDistanceReconstruction(config, TM, effhist):
 
 
 
-
 def x2parms(argvec):
     nrgauss = (len(argvec) + 1) / 3
     a_vals = argvec[0:nrgauss - 1]
