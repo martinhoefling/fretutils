@@ -5,6 +5,8 @@ import sys, os, numpy
 from math import *
 import random
 
+from FRETUtils.Helpers import getKappa, genRandomVec
+
 program_version = "1.0"
 
 
@@ -34,12 +36,6 @@ def getCmdlineOptions():
 
     return parser.parse_args()
 
-def genRandomVec():
-    gauss = numpy.random.normal(size = 3)
-    return gauss / sqrt((gauss ** 2).sum())
-
-def getKappa(donor, acceptor, distance):
-    return (donor * acceptor).sum() - 3 * (donor * distance).sum() * (acceptor * distance).sum()
 
 def alterVec(options, vec):
     vec = (1 - options.decay) * vec + options.decay * genRandomVec()

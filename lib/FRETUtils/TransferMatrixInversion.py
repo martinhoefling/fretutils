@@ -6,10 +6,11 @@ Created on 15.10.2012
 
 '''
 
-import numpy
+from __future__ import division
 from openopt import GLP, NLP
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy
 
 
 setBackend = "TkAgg"

@@ -27,7 +27,7 @@ def genRandomBurstEffs(reff, size):
 
 def genEffIndex(effval, EffBins):
     effndx = int(EffBins * effval)
-    if effndx >= EffBins:
+    if effndx == EffBins:
         effndx -= 1
     return effndx
 
@@ -95,17 +95,18 @@ class GlobalAVGKappaTransferMatrix(TransferMatrix):
         TransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RRange)
         print "Calculating transfer matrix with %d efficiency bins and %d R-bins from %6.2f to %6.2f" % (self.EffBins, self.RBins, self.RRange[0], self.RRange[1])
 
-    def populateMatrixWithBurst(self, rbinindex, reff, burst, weight):
+    def populateMatrixColumnWithBurst(self, rbinindex, reff, burst, weight):
         effval = genRandomBurstEffs(reff, burst)
         effval = efficiencyDeltaFix((effval,))
         effndx = genEffIndex(effval, self.EffBins)
         self.tm[rbinindex, effndx] += weight
 
-    def populateMatrix(self, rbinindex):
+    def populateMatrixColumn(self, rbinindex):
         reff, bursts = self.getBinEfficiencies(rbinindex)
         weight = 1. / len(reff)
+        print "Bin center is at %6.4f" % (generateBinMid(self.myrange, rbinindex, self.RBins, self.RRange[0]))
         for eff, burst in zip(reff, bursts):
-            self.populateMatrixWithBurst(rbinindex, eff, burst, weight)
+            self.populateMatrixColumnWithBurst(rbinindex, eff, burst, weight)
 
     def getR0(self, binnr):
         return self.R0
@@ -114,12 +115,13 @@ class GlobalAVGKappaTransferMatrix(TransferMatrix):
         binmid = generateBinMid(self.myrange, binnr, self.RBins, self.RRange[0])
         myR0 = self.getR0(binnr)
         reff = rToEff(binmid, myR0)
+        print "Bin efficiency is %6.4f" % reff
         return [reff] * self.BurstCount, getBurstSizes(self.BurstCount, self.burstGenerator)
 
     def generateMatrix(self):
         for i in range(self.RBins):
-            print "Generating Matrix column %d of %d" % (i, self.RBins)
-            self.populateMatrix(i)
+            print "======== Generating Matrix column %d of %d ========" % (i, self.RBins)
+            self.populateMatrixColumn(i)
 
         self.matrixGenerated = True
 
@@ -166,14 +168,16 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
 
     def binKappaSanityCheck(self, kappaavgnum):
         if kappaavgnum.min() == 0:
-            raise ValueError("Not all kappa bins have at least one sample. Adjust number of distance-bins or distance range.", (kappaavgnum == 0).nonzero()[0] * self.myrange / self.RBins + self.RRange[0])
+            for bin in (kappaavgnum == 0).nonzero()[0] * self.myrange / self.RBins + self.RRange[0]:
+                print "No sample in %f" % bin
+            raise ValueError("Not all distance bins have at least one sample. Adjust number of distance-bins or distance range.")
         print "There are at least %d kappa samples in each R-bin." % kappaavgnum.min()
 
     def getR0(self, binnr):
         if not self.kappaBinned:
             self.binKappa()
 
-        print "Bin %d - kappa %6.2f" % (binnr, self.kappaavg[binnr])
+        print "Bin kappa is %6.4f" % (self.kappaavg[binnr])
         return modifyR0(self.R0, self.kappaavg[binnr])
 
     def getKappaAVG(self):
@@ -193,12 +197,7 @@ class DistanceKappaTransferMatrix(DistanceAVGKappaTransferMatrix):
 
     def getBinEfficiencies(self, binnr):
         if not self.kappaBinned:
-
             self.binKappa()
-            print "Done."
-
-        if len(self.rkappaBinned[binnr]) == 0:
-            raise ValueError("Bin #%d is empty. This is a problem. Try setting a smaller range and fewer bins in R-direction." % binnr)
 
         bursts = getBurstSizes(self.BurstCount, self.burstGenerator)
         beffs = []

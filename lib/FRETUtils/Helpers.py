@@ -4,6 +4,8 @@ Created on 10.06.2010
 @author: martin
 '''
 import Constants
+import numpy
+from math import sqrt
 
 def JouleInNm(joule):
     return Constants.h_planck * Constants.c_light / joule
@@ -28,3 +30,10 @@ def effToR(eff, R0 = 5.4):
 
 def rToEff(R, R0 = 5.4):
     return 1. / (1. + pow(R / R0, 6.))
+
+def getKappa(donor, acceptor, distance):
+    return (donor * acceptor).sum() - 3 * (donor * distance).sum() * (acceptor * distance).sum()
+
+def genRandomVec():
+    gauss = numpy.random.normal(size = 3)
+    return gauss / sqrt((gauss ** 2).sum())
