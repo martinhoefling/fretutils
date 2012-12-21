@@ -41,16 +41,16 @@ def GaussianRegularizationDistanceReconstruction(config, TM, effhist):
     maxtime = config.get("Reverse Model Fit", "maxruntime")
     pfact = config.get("Reverse Model Fit", "penaltyfact")
 
+    print "Will fit %d gaussian(s) in the range of %f to %f with min and maxwidth %f and %f. Max-runtime is %f." % (ngauss, grmin, grmax, gsigmin, gsigmax, maxtime)
+
     lbounds = [gamin] * (ngauss - 1) + [grmin] * ngauss + [gsigmin] * ngauss
     ubounds = [gamax] * (ngauss - 1) + [grmax] * ngauss + [gsigmax] * ngauss
 
     r_prdist, x_range, e_fitprdist, fitvals = fittingOpenopt(effhist, TM, Rmin, Rmax, lbounds, ubounds, maxtime, pfact)
     return r_prdist, x_range, e_fitprdist, fitvals
 
-
-
 def x2parms(argvec):
-    nrgauss = (len(argvec) + 1) / 3
+    nrgauss = int((len(argvec) + 1) / 3)
     a_vals = argvec[0:nrgauss - 1]
     a_vals = numpy.append(a_vals, 1. - a_vals.sum())
     r_vals = argvec[nrgauss - 1:(2 * nrgauss) - 1]
@@ -142,7 +142,7 @@ def createLivePlot(nrgauss, pearr, tmatrix, xarr, lbounds, ubounds):
     return lines_distance, lines_efficiency, g_lines, chsql, chisqs, chisqax
 
 def fittingOpenopt(pearr, tmatrix, minR, maxR, lbounds, ubounds, gmaxtime, pfact):
-    nrgauss = (len(lbounds) + 1) / 3
+    nrgauss = int((len(lbounds) + 1) / 3)
     rvecbins = tmatrix.getMatrix().shape[0]
     myrange = maxR - minR
     xarr = numpy.linspace(minR + myrange / rvecbins / 2, maxR - myrange / rvecbins / 2, rvecbins)

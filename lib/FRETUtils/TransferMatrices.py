@@ -168,8 +168,8 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
 
     def binKappaSanityCheck(self, kappaavgnum):
         if kappaavgnum.min() == 0:
-            for bin in (kappaavgnum == 0).nonzero()[0] * self.myrange / self.RBins + self.RRange[0]:
-                print "No sample in %f" % bin
+            for mbin in (kappaavgnum == 0).nonzero()[0] * self.myrange / self.RBins + self.RRange[0]:
+                print "No sample in %f" % mbin
             raise ValueError("Not all distance bins have at least one sample. Adjust number of distance-bins or distance range.")
         print "There are at least %d kappa samples in each R-bin." % kappaavgnum.min()
 
