@@ -40,13 +40,14 @@ def GaussianRegularizationDistanceReconstruction(config, TM, effhist):
     ngauss = config.get("Reverse Model Fit", "nr gaussian")
     maxtime = config.get("Reverse Model Fit", "maxruntime")
     pfact = config.get("Reverse Model Fit", "penaltyfact")
+    res = config.get("Reverse Model Fit", "residual")
 
     print "Will fit %d gaussian(s) in the range of %f to %f with min and maxwidth %f and %f. Max-runtime is %f." % (ngauss, grmin, grmax, gsigmin, gsigmax, maxtime)
 
     lbounds = [gamin] * (ngauss - 1) + [grmin] * ngauss + [gsigmin] * ngauss
     ubounds = [gamax] * (ngauss - 1) + [grmax] * ngauss + [gsigmax] * ngauss
 
-    r_prdist, x_range, e_fitprdist, fitvals = fittingOpenopt(effhist, TM, Rmin, Rmax, lbounds, ubounds, maxtime, pfact)
+    r_prdist, x_range, e_fitprdist, fitvals = fittingOpenopt(effhist, TM, Rmin, Rmax, lbounds, ubounds, maxtime, pfact, res)
     return r_prdist, x_range, e_fitprdist, fitvals
 
 def x2parms(argvec):
@@ -141,7 +142,7 @@ def createLivePlot(nrgauss, pearr, tmatrix, xarr, lbounds, ubounds):
     plt.show()
     return lines_distance, lines_efficiency, g_lines, chsql, chisqs, chisqax
 
-def fittingOpenopt(pearr, tmatrix, minR, maxR, lbounds, ubounds, gmaxtime, pfact):
+def fittingOpenopt(pearr, tmatrix, minR, maxR, lbounds, ubounds, gmaxtime, pfact, res):
     nrgauss = int((len(lbounds) + 1) / 3)
     rvecbins = tmatrix.getMatrix().shape[0]
     myrange = maxR - minR
@@ -160,7 +161,7 @@ def fittingOpenopt(pearr, tmatrix, minR, maxR, lbounds, ubounds, gmaxtime, pfact
     mycallback = lambda p: plotCallback(p, lines_distance, lines_efficiency, g_lines, xxarr, tmatrix, chsql, chisqs, chisqax)
 
     print "Starting openopt ##########################"
-    prob = GLP(minfuncwrap, lb = lbounds, ub = ubounds, callback = mycallback, maxFunEvals = 1e15, maxNonSuccess = 200, maxIter = 1e5, maxTime = gmaxtime)
+    prob = GLP(minfuncwrap, lb = lbounds, ub = ubounds, callback = mycallback, maxFunEvals = 1e15, maxNonSuccess = 200, maxIter = 1e5, maxTime = gmaxtime, fEnough = res)
     result = prob.solve('de', population = 1000 * len(lbounds))
 
     # result=prob.solve('asa')

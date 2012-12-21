@@ -126,6 +126,7 @@ class ReconstructionConfigParser(SecureConfigParser):
         self.setdefault("Reverse Model Fit", "x0 min", -1, float, lambda x: x != 0 , "must be non-zero")
         self.setdefault("Reverse Model Fit", "x0 max", -1, float, lambda x: x != 0 , "must be non-zero")
         self.setdefault("Reverse Model Fit", "penaltyfact", 0.0, float, lambda x: x >= 0, "must be zero or positive")
+        self.setdefault("Reverse Model Fit", "residual", 1e-02, float, lambda x: x >= 0, "must be zero or positive")
 
 class BurstDistAVGConfigParser(SecureConfigParser):
     def __init__(self):
