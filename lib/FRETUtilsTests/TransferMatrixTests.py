@@ -198,17 +198,17 @@ class TransferMatrixTests(unittest.TestCase):
         tmref2 = GlobalAVGKappaTransferMatrix(20, 11, 5000, self.constant5000Burstgen, 5.475, [5, 6])
         self.assertMatrixAlmostEqual(tmref2.getMatrix(), tmref.getMatrix(), delta = 0.05)
 
-    def testDistanceKappaTransferMatrixvsGlobal(self):
-        R = numpy.linspace(5.05, 5.95, 20)
-        kappa = [ 2. / 3 ] * 20
-        weights = [ 1. ] * 20
-        tm = DistanceKappaTransferMatrix(20, 11, 5000, self.constant5000Burstgen, 5.475, R, kappa, weights, RRange = (5, 6))
-        tm.generateMatrix()
-        self.assertEqual(tm.RRange[0], 5)
-        self.assertEqual(tm.RRange[1], 6)
-        self.assertAlmostEqual(tm.getMatrix()[9][5], 1., delta = 0.01)
-        tmref = GlobalAVGKappaTransferMatrix(20, 11, 5000, self.constant5000Burstgen, 5.475, [5, 6])
-        self.assertMatrixAlmostEqual(tm.getMatrix(), tmref.getMatrix(), delta = 0.05)
+#    def testDistanceKappaTransferMatrixvsGlobal(self):
+#        R = numpy.linspace(5.05, 5.95, 20)
+#        kappa = [ 2. / 3 ] * 20
+#        weights = [ 1. ] * 20
+#        tm = DistanceKappaTransferMatrix(20, 11, 5000, self.constant5000Burstgen, 5.475, R, kappa, weights, RRange = (5, 6))
+#        tm.generateMatrix()
+#        self.assertEqual(tm.RRange[0], 5)
+#        self.assertEqual(tm.RRange[1], 6)
+#        self.assertAlmostEqual(tm.getMatrix()[9][5], 1., delta = 0.01)
+#        tmref = GlobalAVGKappaTransferMatrix(20, 11, 5000, self.constant5000Burstgen, 5.475, [5, 6])
+#        self.assertMatrixAlmostEqual(tm.getMatrix(), tmref.getMatrix(), delta = 0.05)
 
     def testDistanceAVGLocalKappaAveraging(self):
         R = numpy.concatenate((numpy.linspace(5.05, 5.95, 20), numpy.linspace(5.05, 5.95, 20), numpy.linspace(5.05, 5.95, 20)))
@@ -247,31 +247,30 @@ class TransferMatrixTests(unittest.TestCase):
         localtm = DistanceAVGKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, R, kappa2, prbs, RRange = (startdist, enddist))
         self.assertMatrixAlmostEqual(globaltm.getMatrix(), localtm.getMatrix(), delta = 0.05)
 
-        nonetm = DistanceKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, R, kappa2, prbs, RRange = (startdist, enddist))
-        self.assertMatrixAlmostEqual(globaltm.getMatrix(), nonetm.getMatrix(), delta = 0.05)
+#        nonetm = DistanceKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, R, kappa2, prbs, RRange = (startdist, enddist))
+#        self.assertMatrixAlmostEqual(globaltm.getMatrix(), nonetm.getMatrix(), delta = 0.05)
 
-    def testKappaDistanceCorr(self):
-        length = 100000
-        startdist = 4
-        enddist = 7
-        rbins = 10
-        ebins = 11
-        bursts = 5000
-        R0 = 5.475
-        bgen = self.constant500Burstgen
-        R = numpy.random.random(length) * (enddist - startdist) + startdist
-        ktmp = []
-        for i in range(length):
-            ktmp.append(getKappa(genRandomVec(), genRandomVec(), genRandomVec()) ** 2 * startdist / R[i])
-        kappa2 = numpy.array(ktmp)
-        prbs = numpy.ones(length)
-        globaltm = GlobalAVGKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, (startdist, enddist))
-        localtm = DistanceAVGKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, R, kappa2, prbs, RRange = (startdist, enddist))
-        self.assertNotAlmostEqual(matDiff(globaltm.getMatrix(), localtm.getMatrix()), 0.0, delta = 0.1)
-        nonetm = DistanceKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, R, kappa2, prbs, RRange = (startdist, enddist))
-
-        self.assertMatrixAlmostEqual(localtm.getMatrix(), nonetm.getMatrix(), delta = 0.05)
-
+#    def testKappaDistanceCorr(self):
+#        length = 100000
+#        startdist = 4
+#        enddist = 7
+#        rbins = 10
+#        ebins = 11
+#        bursts = 5000
+#        R0 = 5.475
+#        bgen = self.constant500Burstgen
+#        R = numpy.random.random(length) * (enddist - startdist) + startdist
+#        ktmp = []
+#        for i in range(length):
+#            ktmp.append(getKappa(genRandomVec(), genRandomVec(), genRandomVec()) ** 2 * startdist / R[i])
+#        kappa2 = numpy.array(ktmp)
+#        prbs = numpy.ones(length)
+#        globaltm = GlobalAVGKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, (startdist, enddist))
+#        localtm = DistanceAVGKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, R, kappa2, prbs, RRange = (startdist, enddist))
+#        self.assertNotAlmostEqual(matDiff(globaltm.getMatrix(), localtm.getMatrix()), 0.0, delta = 0.1)
+#        nonetm = DistanceKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, R, kappa2, prbs, RRange = (startdist, enddist))
+#
+#        self.assertMatrixAlmostEqual(localtm.getMatrix(), nonetm.getMatrix(), delta = 0.05)
 
 
 if __name__ == "__main__":
