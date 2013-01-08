@@ -8,7 +8,7 @@ from __future__ import division
 
 import unittest
 from FRETUtils.TransferMatrices import TransferMatrix, GlobalAVGKappaTransferMatrix, DistanceAVGKappaTransferMatrix, DistanceKappaTransferMatrix, genEffIndex, generateBinMid, modifyR0
-from FRETUtils.Helpers import rToEff
+from FRETUtils.Helpers import rToEff, genRandomVec, getKappa
 from FRETUtils.Efficiencies import efficiencyDeltaFix
 import tempfile, os, shutil, random
 import numpy
@@ -51,6 +51,8 @@ class TransferMatrixTests(unittest.TestCase):
             mmax = m2.max()
         diff /= mmax
         print "Matrix difference is %f percent" % (diff * 100)
+        print "Matrix1 sum", m1.sum()
+        print "Matrix1 sum", m2.sum()
         if diff > delta:
             pyplot.figure()
             pyplot.subplot(221)
@@ -75,7 +77,7 @@ class TransferMatrixTests(unittest.TestCase):
         self.assertEqual(genEffIndex(1., 10), 9)
 
     def testAbstract(self):
-        tm = TransferMatrix(20, 11, 5, self.constant5000Burstgen, 5.475, [5, 6])
+        tm = TransferMatrix(20, 11, [5, 6])
         self.assertRaises(NotImplementedError, tm.generateMatrix)
 
     def testSamplesOutsideRange(self):
@@ -232,22 +234,23 @@ class TransferMatrixTests(unittest.TestCase):
         self.assertEqual(os.path.exists(ofl), True)
         shutil.rmtree(odir)
 
-#    def testRandomUncorr(self):
-#        length = 1000000
-#        startdist = 4
-#        enddist = 7
-#        rbins = 20
-#        ebins = 50
-#        bursts = 500
-#        R0 = 5.475
-#        bgen = self.constant500Burstgen
-#        R = numpy.random.random(length) * (enddist - startdist) + startdist
-#        kappa2 = numpy.array(list(getKappa(genRandomVec(), genRandomVec(), genRandomVec()) ** 2 for _ in range(length)))
-#        R0mod = modifyR0(R0, kappa2.mean())
-#        prbs = numpy.ones(length)
-#        globaltm = GlobalAVGKappaTransferMatrix(rbins, ebins, bursts, bgen, R0mod, (startdist, enddist))
-#        localtm = DistanceAVGKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, R, kappa2, prbs, RRange = (startdist, enddist))
-#        self.assertMatrixAlmostEqual(globaltm.getMatrix(), localtm.getMatrix(), delta = 0.05)
+    def testRandomUncorr(self):
+        length = 100000
+        startdist = 4
+        enddist = 7
+        rbins = 10
+        ebins = 20
+        bursts = 10000
+        R0 = 5.475
+        bgen = self.constant50Burstgen
+        R = numpy.random.random(length) * (enddist - startdist) + startdist
+        kappa2 = numpy.array(list(getKappa(genRandomVec(), genRandomVec(), genRandomVec()) ** 2 for _ in range(length)))
+        print "Kappa^2 mean is ", kappa2.mean()
+        R0mod = modifyR0(R0, kappa2.mean())
+        prbs = numpy.ones(length)
+        globaltm = GlobalAVGKappaTransferMatrix(rbins, ebins, bursts, bgen, R0mod, (startdist, enddist))
+        localtm = DistanceAVGKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, R, kappa2, prbs, RRange = (startdist, enddist))
+        self.assertMatrixAlmostEqual(globaltm.getMatrix(), localtm.getMatrix(), delta = 0.10)
 
 #        nonetm = DistanceKappaTransferMatrix(rbins, ebins, bursts, bgen, R0, R, kappa2, prbs, RRange = (startdist, enddist))
 #        self.assertMatrixAlmostEqual(globaltm.getMatrix(), nonetm.getMatrix(), delta = 0.05)
