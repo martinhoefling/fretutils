@@ -39,16 +39,12 @@ def modifyR0(R0, newkappa):
 
 
 class TransferMatrix(object):
-    def __init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RRange):
+    def __init__(self, RBins, EffBins, RRange):
         self.tm = np.zeros((RBins, EffBins), np.float64)
         self.RBins = RBins
         self.EffBins = EffBins
-        self.BurstCount = BurstCount
-        self.burstGenerator = burstGenerator
         self.RRange = RRange
         self.myrange = getRange(self.RRange)
-        self.R0 = R0
-
         self.matrixGenerated = False
 
     def generateMatrix(self):
@@ -71,7 +67,7 @@ class TransferMatrix(object):
         xfifth = self.RBins / 5
         yfifth = self.EffBins / 5
         maxscale = self.tm[xfifth:-xfifth, yfifth:-yfifth].max()
-        plt.imshow(self.tm.T, interpolation = 'nearest', aspect = "auto", origin = "lower", cmap = cm.jet, vmin = self.tm.min(), vmax = maxscale)
+        plt.imshow(self.tm.T, interpolation = 'nearest', aspect = "auto", origin = "lower", cmap = cm.jet, vmin = self.tm.min(), vmax = maxscale)  # @UndefinedVariable IGNORE:E1101
         plt.xlabel("Distance")
         plt.ylabel("Efficiency")
         nrlabels = 4
@@ -92,7 +88,12 @@ class TransferMatrix(object):
 
 class GlobalAVGKappaTransferMatrix(TransferMatrix):
     def __init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RRange):
-        TransferMatrix.__init__(self, RBins, EffBins, BurstCount, burstGenerator, R0, RRange)
+        TransferMatrix.__init__(self, RBins, EffBins, RRange)
+        self.BurstCount = BurstCount
+        self.burstGenerator = burstGenerator
+        self.R0 = R0
+
+
         print "Calculating transfer matrix with %d efficiency bins and %d R-bins from %6.2f to %6.2f" % (self.EffBins, self.RBins, self.RRange[0], self.RRange[1])
 
     def populateMatrixColumnWithBurst(self, rbinindex, reff, burst, weight):
@@ -108,7 +109,7 @@ class GlobalAVGKappaTransferMatrix(TransferMatrix):
         for eff, burst in zip(reff, bursts):
             self.populateMatrixColumnWithBurst(rbinindex, eff, burst, weight)
 
-    def getR0(self, binnr):
+    def getR0(self, binnr):  # IGNORE:W0613
         return self.R0
 
     def getBinEfficiencies(self, binnr):
@@ -139,7 +140,7 @@ class DistanceAVGKappaTransferMatrix(GlobalAVGKappaTransferMatrix):
         self.kappaBinned = False
 
 
-    def addToBin(self, kappaavgnum, R, K, prb, Rind):
+    def addToBin(self, kappaavgnum, R, K, prb, Rind):  # IGNORE:W0613
         self.kappaavg[Rind] += K * prb
         kappaavgnum[Rind] += prb
 
@@ -234,3 +235,12 @@ class DistanceKappaTransferMatrix(DistanceAVGKappaTransferMatrix):
         return beffs, bursts
 
 
+class FRETSimulationTransferMatrix(TransferMatrix):
+    def __init__(self, RBins, EffBins, TotalBurstCount, FREToptions, RRange):
+        TransferMatrix.__init__(self, RBins, EffBins, RRange)
+        self.options = FREToptions
+        self.totalbursts = TotalBurstCount
+
+    def generateMatrix(self):
+        raise NotImplementedError("Please implement this function!")
+        

@@ -39,14 +39,14 @@ class SecureConfigParser(object, ConfigParser):
         if not allowed[1](value):
             raise ValueError("Option %s in section %s %s, not" % (option, section, self.errormsg[(section, option)]), value)
 
-    def set(self, section, option, value):
+    def set(self, section, option, value = None):
         self.check(section, option.lower(), value)
         super(SecureConfigParser, self).set(section, option.lower(), str(value))
 
-    def get(self, section, option):
+    def get(self, section, option, raw = False, vars = None):  # @ReservedAssignment IGNORE:W0622
         if not self.allowed.has_key((section, option.lower())):
             raise ValueError("Invalid config option requested.")
-        return self.allowed[(section, option.lower())][0](super(SecureConfigParser, self).get(section, option.lower()))
+        return self.allowed[(section, option.lower())][0](super(SecureConfigParser, self).get(section, option.lower(), raw = raw, vars = vars))
 
     def checkall(self):
         for section in self.sections():
@@ -57,8 +57,8 @@ class SecureConfigParser(object, ConfigParser):
         super(SecureConfigParser, self).read(fname)
         self.checkall()
 
-    def readfp(self, fp):
-        super(SecureConfigParser, self).readfp(fp)
+    def readfp(self, fp, filename = None):
+        super(SecureConfigParser, self).readfp(fp, filename = filename)
         self.checkall()
 
     def makeReadonly(self):
@@ -106,7 +106,7 @@ class FRETConfigParser(SecureConfigParser):
 class ReconstructionConfigParser(SecureConfigParser):
     def __init__(self):
         SecureConfigParser.__init__(self)
-        self.setdefault("Transfer Matrix", "type", "global", str, lambda x:x in ("global", "local", "none"), "must be one of global local or none")
+        self.setdefault("Transfer Matrix", "type", "global", str, lambda x:x in ("fret", "global", "local", "none"), "must be one of global local or none")
         self.setdefault("Transfer Matrix", "R0", 5.4, float, lambda x: x > 0, "must be positive")
         self.setdefault("Transfer Matrix", "distance bins", 80, int, lambda x: x > 0, "must be positive")
         self.setdefault("Transfer Matrix", "efficiency bins", 50, int, lambda x: x > 0, "must be positive")

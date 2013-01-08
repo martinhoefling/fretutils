@@ -7,7 +7,7 @@ Created on 15.10.2012
 '''
 
 from __future__ import division
-from openopt import GLP, NLP
+from openopt import GLP  # , NLP
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy

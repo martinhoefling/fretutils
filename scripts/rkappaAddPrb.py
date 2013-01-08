@@ -44,10 +44,18 @@ def main():
 # (C) 2012 Martin Hoefling and Helmut Grubmueller
 #
 # Please cite the usage as:
+#
 # Hoefling M, Lima N, Haenni D, Seidel CAM, Schuler B, Grubmueller H,  
 # Structural Heterogeneity and Quantitative FRET Efficiency Distributions 
 # of Polyprolines through a Hybrid Atomistic Simulation and Monte Carlo 
 # Approach. (2011) PLoS ONE 6(5): e19791. doi:10.1371/journal.pone.0019791
+#
+# and
+#
+# Hoefling M, Grubmueller H,
+# In silico FRET from simulated dye dynamics. (2012), Computer Physics 
+# Communications 184(3):814-852
+#
     """ % (os.path.basename(sys.argv[0]), program_version)
 
 if __name__ == "__main__":

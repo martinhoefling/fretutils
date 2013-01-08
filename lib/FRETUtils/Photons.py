@@ -10,11 +10,16 @@ import sys
 import random as pyrand
 
 class Photon:
-    def __init__(self, donor, endtime, duration, thermal = False):
+    def __init__(self, donor, startndx, endndx, deltat, trajectory, thermal = False):
         self.donor = donor
+        self.startndx = startndx
+        self.endndx = endndx
         self.thermal = thermal
-        self.endtime = endtime
-        self.duration = duration
+        self.deltat = deltat
+        self.trajectory = trajectory
+        self.starttime = deltat * startndx
+        self.endtime = deltat * endndx
+        self.duration = self.endtime - self.starttime
 
     def checkThermal(self, QD, QA):
         # we have donor photon roll if really a photon...
@@ -53,13 +58,11 @@ def getPhoton(traj, conf, startndx = None):
             photon, endndx = _tryGetPhoton(pDtot, pRETpDtot, startndx, random.randint(0, sys.maxint))
 
             if not rejectPhoton(startndx, endndx, traj, conf):
-                duration = endndx - startndx
-
                 if photon == 0:
                     donor = True
                 else:
                     donor = False
-                return Photon(donor, endndx * conf.get("Monte Carlo", "deltat"), duration * conf.get("Monte Carlo", "deltat"))
+                return Photon(donor, startndx, endndx, conf.get("Monte Carlo", "deltat"), traj)
             else:
                 rejectcount += 1
         raise ValueError("Reject count reached")

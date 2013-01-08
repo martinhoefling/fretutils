@@ -16,8 +16,8 @@ class DummyConfigParser(SecureConfigParser):
 
 class testPhotonFunctions(unittest.TestCase):
     def setUp(self):
-        self.donorphoton = Photons.Photon(True, 1000, 4000, thermal = False)
-        self.acceptorphoton = Photons.Photon(False, 1000, 4000, thermal = False)
+        self.donorphoton = Photons.Photon(True, 1000, 4000,1.,None, thermal = False)
+        self.acceptorphoton = Photons.Photon(False, 1000, 4000, 1., None, thermal = False)
 
     def test_donor_thermal(self):
         self.donorphoton.checkThermal(0.0, 0.0)
