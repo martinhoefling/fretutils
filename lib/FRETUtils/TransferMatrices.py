@@ -236,10 +236,9 @@ class DistanceKappaTransferMatrix(DistanceAVGKappaTransferMatrix):
 
 
 class FRETSimulationTransferMatrix(TransferMatrix):
-    def __init__(self, RBins, EffBins, TotalBurstCount, FREToptions, RRange):
+    def __init__(self, RBins, EffBins, FREToptions, RRange):
         TransferMatrix.__init__(self, RBins, EffBins, RRange)
         self.options = FREToptions
-        self.totalbursts = TotalBurstCount
 
     def generateMatrix(self):
         raise NotImplementedError("Please implement this function!")

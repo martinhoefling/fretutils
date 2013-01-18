@@ -195,13 +195,14 @@ class TransferMatrixTests(unittest.TestCase):
         R = numpy.linspace(5.05, 5.95, 20)
         kappa = [ 2. / 3 ] * 20
         weights = [ 1. ] * 20
-        tm = DistanceKappaTransferMatrix(20, 11, 5000, self.constant5000Burstgen, 5.475, R, kappa, weights, RRange = (5, 6))
+        bursts = 500
+        tm = DistanceKappaTransferMatrix(20, 11, bursts, self.constant5000Burstgen, 5.475, R, kappa, weights, RRange = (5, 6))
         tm.generateMatrix()
         self.assertEqual(tm.RRange[0], 5)
         self.assertEqual(tm.RRange[1], 6)
         self.assertAlmostEqual(tm.getMatrix()[9][5], 1., delta = 0.01)
-        tmref = GlobalAVGKappaTransferMatrix(20, 11, 5000, self.constant5000Burstgen, 5.475, [5, 6])
-        tmref2 = GlobalAVGKappaTransferMatrix(20, 11, 5000, self.constant5000Burstgen, 5.475, [5, 6])
+        tmref = GlobalAVGKappaTransferMatrix(20, 11, bursts, self.constant5000Burstgen, 5.475, [5, 6])
+        tmref2 = GlobalAVGKappaTransferMatrix(20, 11, bursts, self.constant5000Burstgen, 5.475, [5, 6])
         self.assertMatrixAlmostEqual(tmref2.getMatrix(), tmref.getMatrix(), delta = 0.05)
 
 #    def testDistanceKappaTransferMatrixvsGlobal(self):

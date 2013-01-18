@@ -8,7 +8,7 @@ from FRETUtils.Bursts import readBurstSizes, genPowerlawTable, \
 import random
 import numpy
 
-from TransferMatrices import GlobalAVGKappaTransferMatrix, DistanceAVGKappaTransferMatrix, DistanceKappaTransferMatrix
+from TransferMatrices import GlobalAVGKappaTransferMatrix, DistanceAVGKappaTransferMatrix, DistanceKappaTransferMatrix, FRETSimulationTransferMatrix
 from TransferMatrixInversion import GaussianRegularizationDistanceReconstruction
 
 transferMatrices = ("global", "local", "none")
@@ -66,17 +66,20 @@ def getRange(config):
         raise ValueError("Specify distance range by two positive values, or two negative for autodetect.")
     return myrange
 
-def constructNonGlobalTM(TMType, options, config, burstGenerator):
+
+def getTransferMatrixRange(config):
     myrange = getRange(config)
+    dbins = config.get("Transfer Matrix", "distance bins")
+    ebins = config.get("Transfer Matrix", "efficiency bins")
+    return dbins, ebins, myrange
 
+def constructNonGlobalTM(TMType, options, config, burstGenerator):
+    dbins, ebins, myrange = getTransferMatrixRange(config)
     RSamples, KappaSamples, SampleWeights = readRKPrbSamples(options.rkappafile)
-
     if not myrange:
         config.set("Transfer Matrix", "from distance", RSamples.min())
         config.set("Transfer Matrix", "to distance", RSamples.max())
 
-    dbins = config.get("Transfer Matrix", "distance bins")
-    ebins = config.get("Transfer Matrix", "efficiency bins")
     bcount = config.get("Transfer Matrix", "bursts per bin")
     R0 = config.get("Transfer Matrix", "R0")
     TM = TMType(dbins, ebins, bcount, burstGenerator, R0, RSamples, KappaSamples, SampleWeights, RRange = myrange)
@@ -98,15 +101,22 @@ def getBurstGenerator(config):
     else:
         return getExpBurstgen(config.get("Burst Size Distribution", "bsdfile"))
 
+def constructFRETTM(options, config):
+    dbins, ebins, myrange = getTransferMatrixRange(config)
+    return FRETSimulationTransferMatrix(dbins, ebins, options, myrange)
+
 def constructTM(options, config):
-    burstgen = getBurstGenerator(config)
     tm = config.get("Transfer Matrix", "type")
-    if tm == "global":
-        return constructGlobalTM(options, config, burstgen)
-    elif tm == "local":
-        return constructLocalTM(options, config, burstgen)
-    elif tm == "none":
-        return constructNoAVGTM(options, config, burstgen)
+    if tm == "fret":
+        return constructFRETTM(options, config)
+    else:
+        burstgen = getBurstGenerator(config)
+        if tm == "global":
+            return constructGlobalTM(options, config, burstgen)
+        elif tm == "local":
+            return constructLocalTM(options, config, burstgen)
+        elif tm == "none":
+            return constructNoAVGTM(options, config, burstgen)
 
 def resolveDistances(config, TM, effhist):
     return GaussianRegularizationDistanceReconstruction(config, TM, effhist)
